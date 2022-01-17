@@ -100,8 +100,16 @@ def generate_invoice_overlay(client_form: dict) -> PageObject:
     text = invoice_layer_canvas.beginText()
     text.setFont('OpenSans', 8)
 
+    line = client_form["receiptNumber"]
+    text.setTextOrigin(29.5*mm, 241.5*mm)
+    text.textLines(line)
+
+    line = format_date(client_form["invoiceDate"])
+    text.setTextOrigin(65.5*mm, 241.5*mm)
+    text.textLines(line)
+
     line = generate_invoice_address_line(client_form)
-    text.setTextOrigin(29.6*mm, 224.5*mm)
+    text.setTextOrigin(29.5*mm, 224.5*mm)
     text.textLines(line)
 
     invoice_layer_canvas.drawText(text)
