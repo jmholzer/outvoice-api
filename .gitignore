@@ -130,3 +130,6 @@ dmypy.json
 
 # IMPORTANT ignore db folder to avoid leaking data to GH :)
 db/
+
+# Ignore generated invoices folder
+invoices/
