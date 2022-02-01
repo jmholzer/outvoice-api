@@ -1,8 +1,9 @@
+from turtle import st
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import inspect
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel
 from pdf import generate_invoice
 from local_print import print_document
@@ -42,7 +43,11 @@ class InvoiceForm(BaseModel):
     postCode: str
     receiptAmount: str
     receiptNumber: str
-    receiptDescription: str
+    lineItems: List[List[str]]
+    subtotal: str
+    tax: str
+    payDate: str
+    balance: str
     method: str
 
 
@@ -68,11 +73,11 @@ client_db_row_schema = [
 
 
 def get_request_fields(request_cls):
-    boring = dir(type('dummy', (BaseModel,), {}))
+    dummy_base_model = dir(type('dummy', (BaseModel,), {}))
     return [
         item[0]
         for item in inspect.getmembers(request_cls)
-        if item[0] not in boring
+        if item[0] not in dummy_base_model
     ]
 
 
@@ -114,7 +119,6 @@ def add_client_using_invoice(request_body: dict) -> None:
     request_body_copy = deepcopy(request_body)
     del request_body_copy["receiptAmount"]
     del request_body_copy["receiptNumber"]
-    del request_body_copy["receiptDescription"]
     request_body_copy["method"] = "add"
     add_client(request_body_copy)
 
