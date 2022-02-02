@@ -15,6 +15,7 @@ from typing import List
 
 
 pdfmetrics.registerFont(TTFont('OpenSans', 'OpenSans-Regular.ttf'))
+pdfmetrics.registerFont(TTFont('OpenSans-Italic', 'OpenSans-Italic.ttf'))
 
 
 def format_date(date):
@@ -87,7 +88,11 @@ def generate_invoice_address_line(form: dict) -> str:
         )
 
 
-def generate_invoice_overlay(invoice_form: dict) -> PageObject:
+def generate_invoice_overlay(
+        invoice_form: dict,
+        page_number: int,
+        total_pages: int
+    ) -> PageObject:
     """
     Create a PDF page (overlay) of invoice information
     that can be rendered on top of a blank invoice page.
@@ -151,9 +156,21 @@ def generate_invoice_overlay(invoice_form: dict) -> PageObject:
     text.setFont('OpenSans', 14)
     text.textLines(balance)
 
+    page_number_line = f"Page {page_number + 1} of {total_pages}"
+    text.setTextOrigin(180*mm, 10*mm)
+    text.setFont('OpenSans', 8)
+    text.textLines(page_number_line)
+
+    if page_number + 1 < total_pages:
+        turn_over_line = "(Invoice continues overleaf)"
+        text.setTextOrigin(159*mm, 80*mm)
+        text.setFont('OpenSans-Italic', 8)
+        text.textLines(turn_over_line)
+
     invoice_layer_canvas.drawText(text)
     invoice_layer_canvas.save()
     packet.seek(0)
+
     return PdfFileReader(packet).getPage(0)
 
 
@@ -202,14 +219,15 @@ def generate_invoice_pages(invoice_form: dict) -> List[PageObject]:
     line_item_lists = generate_line_item_lists(invoice_form["lineItems"])
     invoice_pages = []
 
-    for line_item_list in line_item_lists:
+    total_pages = len(line_item_lists)
+    for page_number, line_item_list in enumerate(line_item_lists):
         invoice_form_copy = copy(invoice_form)
         invoice_form_copy["lineItems"] = line_item_list
 
         # Read the blank invoice
         invoice_page = read_first_page(page_template_path)
         # Generate an overlay using client data
-        overlay = generate_invoice_overlay(invoice_form_copy)
+        overlay = generate_invoice_overlay(invoice_form_copy, page_number, total_pages)
         # Merge the overlay on top of the blank invoice.
         invoice_page.mergePage(overlay)
         # Add page to the finished invoice.
