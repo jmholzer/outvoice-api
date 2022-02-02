@@ -117,37 +117,37 @@ def generate_invoice_overlay(invoice_form: dict) -> PageObject:
     line_item_offset = 0
     for line_item in invoice_form["lineItems"]:
         item = line_item[0]
-        text.setTextOrigin(29.5*mm, (190 + line_item_offset)*mm)
+        text.setTextOrigin(29.5*mm, (180 + line_item_offset)*mm)
         text.textLines(item)
 
         cost_per_item = line_item[1]
-        text.setTextOrigin(60*mm, (190 + line_item_offset)*mm)
+        text.setTextOrigin(117*mm, (180 + line_item_offset)*mm)
         text.textLines(cost_per_item)
 
         quantity = line_item[2]
-        text.setTextOrigin(90*mm, (190 + line_item_offset)*mm)
+        text.setTextOrigin(149*mm, (180 + line_item_offset)*mm)
         text.textLines(quantity)
 
         total = line_item[3]
-        text.setTextOrigin(90*mm, (190 + line_item_offset)*mm)
+        text.setTextOrigin(167.5*mm, (180 + line_item_offset)*mm)
         text.textLines(total)
 
-        line_item_offset -= 20
+        line_item_offset -= 5
 
     subtotal = invoice_form["subtotal"]
-    text.setTextOrigin(90*mm, 70*mm)
+    text.setTextOrigin(167.5*mm, 117*mm)
     text.textLines(subtotal)
 
     tax = invoice_form["tax"]
-    text.setTextOrigin(90*mm, 65*mm)
+    text.setTextOrigin(167.5*mm, 112*mm)
     text.textLines(tax)
 
     terms = "Pay on or before " + invoice_form["payDate"]
-    text.setTextOrigin(29.5*mm, 50*mm)
-    text.textLines(tax)
+    text.setTextOrigin(29.5*mm, 65*mm)
+    text.textLines(terms)
 
     balance = invoice_form["balance"]
-    text.setTextOrigin(90*mm, 50*mm)
+    text.setTextOrigin(159*mm, 85*mm)
     text.setFont('OpenSans', 14)
     text.textLines(balance)
 
@@ -167,7 +167,7 @@ def generate_line_item_lists(line_items: List[str]) -> List[List[str]]:
         line_items -- the list of line items to split into sublists
     """
     n = len(line_items)
-    return [line_items[j:j+9] for j in range(0, n, 9)]
+    return [line_items[j:j+10] for j in range(0, n, 9)]
 
 
 def generate_output_path(invoice_form: dict) -> str:
