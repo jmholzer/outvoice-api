@@ -1,5 +1,6 @@
 import io
 import os
+from json import load
 from PyPDF2 import PdfFileWriter, PdfFileReader
 from PyPDF2.pdf import PageObject
 from reportlab.pdfgen import canvas
@@ -9,6 +10,7 @@ from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.units import mm
 from reportlab.pdfgen.canvas import Canvas
+from reportlab.pdfgen.textobject import PDFTextObject
 from datetime import datetime
 from copy import copy
 from typing import List
@@ -88,6 +90,31 @@ def generate_invoice_address_line(form: dict) -> str:
         )
 
 
+def write_text_to_overlay(
+        line: str,
+        text: PDFTextObject,
+        x_origin: float,
+        y_origin: float,
+        font: str,
+        size: int
+    ) -> None:
+    """
+    Write the text at the given position, with a given font and size. Modifies the
+    passed PDFTextObject (text) in place and does not return a value.
+
+    Arguments:
+        line -- the line of text to to write.
+        text -- the reportlab PDFTextObject object attached to the overlay canvas.
+        x_origin -- the x position (mm) to start the text at on the overlay.
+        y_origin -- the y position (mm) to start the text at on the overlay.
+        font -- the font to use for the text to write.
+        size -- the size of the text to write.
+    """
+    text.setFont(font, size)
+    text.setTextOrigin(x_origin, y_origin)
+    text.textLines(line)
+
+
 def generate_invoice_overlay(
         invoice_form: dict,
         page_number: int,
@@ -101,6 +128,11 @@ def generate_invoice_overlay(
     invoice_form -- data about the client passed from
         the API end-point
     """
+    relative_layout_file_path = "layouts/default"
+    layout_file_path = generate_absolute_path(relative_layout_file_path)
+    with open(layout_file_path, "r") as layout_file:
+        layout = load(layout_file)
+
     packet = io.BytesIO()
     invoice_layer_canvas = canvas.Canvas(packet)
     invoice_layer_canvas.setPageSize((A4))
