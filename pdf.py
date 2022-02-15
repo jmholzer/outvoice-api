@@ -93,10 +93,7 @@ def generate_invoice_address_line(form: dict) -> str:
 def write_text_to_overlay(
         line: str,
         text: PDFTextObject,
-        x_origin: float,
-        y_origin: float,
-        font: str,
-        size: int
+        layout: dict
     ) -> None:
     """
     Write the text at the given position, with a given font and size. Modifies the
@@ -105,13 +102,14 @@ def write_text_to_overlay(
     Arguments:
         line -- the line of text to to write.
         text -- the reportlab PDFTextObject object attached to the overlay canvas.
-        x_origin -- the x position (mm) to start the text at on the overlay.
-        y_origin -- the y position (mm) to start the text at on the overlay.
-        font -- the font to use for the text to write.
-        size -- the size of the text to write.
+        layout -- a dict that contains the following fields:
+            x_origin -- the x position (mm) to start the text at on the overlay.
+            y_origin -- the y position (mm) to start the text at on the overlay.
+            font -- the font to use for the text to write.
+            size -- the size of the text to write.
     """
-    text.setFont(font, size)
-    text.setTextOrigin(x_origin, y_origin)
+    text.setFont(layout["font"], layout["size"])
+    text.setTextOrigin(layout["x_origin"] * mm, layout["y_origin"] * mm)
     text.textLines(line)
 
 
@@ -128,7 +126,7 @@ def generate_invoice_overlay(
     invoice_form -- data about the client passed from
         the API end-point
     """
-    relative_layout_file_path = "layouts/default"
+    relative_layout_file_path = "layouts/default.json"
     layout_file_path = generate_absolute_path(relative_layout_file_path)
     with open(layout_file_path, "r") as layout_file:
         layout = load(layout_file)
@@ -137,19 +135,14 @@ def generate_invoice_overlay(
     invoice_layer_canvas = canvas.Canvas(packet)
     invoice_layer_canvas.setPageSize((A4))
     text = invoice_layer_canvas.beginText()
-    text.setFont('OpenSans', 8)
+    
+    write_text_to_overlay(invoice_form["receiptNumber"], text, layout["invoice_number"])
 
-    invoice_number = invoice_form["receiptNumber"]
-    text.setTextOrigin(29.5*mm, 241.5*mm)
-    text.textLines(invoice_number)
-
-    invoice_date = format_date(invoice_form["invoiceDate"])
-    text.setTextOrigin(65.5*mm, 241.5*mm)
-    text.textLines(invoice_date)
+    date = format_date(invoice_form["invoiceDate"])
+    write_text_to_overlay(date, text, layout["date"])
 
     address = generate_invoice_address_line(invoice_form)
-    text.setTextOrigin(29.5*mm, 224.5*mm)
-    text.textLines(address)
+    write_text_to_overlay(address, text, layout["address_line"])
 
     line_item_offset = 0
     for line_item in invoice_form["lineItems"]:
