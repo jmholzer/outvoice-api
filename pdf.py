@@ -156,27 +156,6 @@ def generate_invoice_overlay(
             layout["line_item"][key],
             y_offset=line_item_offset
         )
-        #item = line_item[0]
-        #text.setTextOrigin(29.5*mm, (180 + line_item_offset)*mm)
-        #text.textLines(item)
-        
-        #cost_per_item = line_item[1]
-        #text.setTextOrigin(117*mm, (180 + line_item_offset)*mm)
-        #text.textLines(cost_per_item)
-
-        #quantity = line_item[2]
-        #text.setTextOrigin(149*mm, (180 + line_item_offset)*mm)
-        #text.textLines(quantity)
-        #write_text_to_overlay(
-        #    line_item["quantity"],
-        #    text,
-        #    layout["line_item"]["cost_per_item"],
-        #    y_offset=line_item_offset
-        #)
-
-        #total = line_item[3]
-        #text.setTextOrigin(167.5*mm, (180 + line_item_offset)*mm)
-        #text.textLines(total)
 
         line_item_offset -= 5
 
