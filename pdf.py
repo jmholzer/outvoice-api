@@ -13,7 +13,7 @@ from reportlab.pdfgen.canvas import Canvas
 from reportlab.pdfgen.textobject import PDFTextObject
 from datetime import datetime
 from copy import copy
-from typing import List
+from typing import List, Optional
 
 
 pdfmetrics.registerFont(TTFont('OpenSans', 'OpenSans-Regular.ttf'))
@@ -93,7 +93,9 @@ def generate_invoice_address_line(form: dict) -> str:
 def write_text_to_overlay(
         line: str,
         text: PDFTextObject,
-        layout: dict
+        layout: dict,
+        x_offset: Optional[float] = 0,
+        y_offset: Optional[float] = 0
     ) -> None:
     """
     Write the text at the given position, with a given font and size. Modifies the
@@ -108,8 +110,9 @@ def write_text_to_overlay(
             font -- the font to use for the text to write.
             size -- the size of the text to write.
     """
+    x, y = layout["x_origin"] + x_offset, layout["y_origin"] + y_offset
     text.setFont(layout["font"], layout["size"])
-    text.setTextOrigin(layout["x_origin"] * mm, layout["y_origin"] * mm)
+    text.setTextOrigin(x * mm, y * mm)
     text.textLines(line)
 
 
@@ -142,25 +145,38 @@ def generate_invoice_overlay(
     write_text_to_overlay(date, text, layout["date"])
 
     address = generate_invoice_address_line(invoice_form)
-    write_text_to_overlay(address, text, layout["address_line"])
+    write_text_to_overlay(address, text, layout["address"])
 
     line_item_offset = 0
     for line_item in invoice_form["lineItems"]:
-        item = line_item[0]
-        text.setTextOrigin(29.5*mm, (180 + line_item_offset)*mm)
-        text.textLines(item)
+        for key in line_item:
+            write_text_to_overlay(
+            line_item[key],
+            text,
+            layout["line_item"][key],
+            y_offset=line_item_offset
+        )
+        #item = line_item[0]
+        #text.setTextOrigin(29.5*mm, (180 + line_item_offset)*mm)
+        #text.textLines(item)
+        
+        #cost_per_item = line_item[1]
+        #text.setTextOrigin(117*mm, (180 + line_item_offset)*mm)
+        #text.textLines(cost_per_item)
 
-        cost_per_item = line_item[1]
-        text.setTextOrigin(117*mm, (180 + line_item_offset)*mm)
-        text.textLines(cost_per_item)
+        #quantity = line_item[2]
+        #text.setTextOrigin(149*mm, (180 + line_item_offset)*mm)
+        #text.textLines(quantity)
+        #write_text_to_overlay(
+        #    line_item["quantity"],
+        #    text,
+        #    layout["line_item"]["cost_per_item"],
+        #    y_offset=line_item_offset
+        #)
 
-        quantity = line_item[2]
-        text.setTextOrigin(149*mm, (180 + line_item_offset)*mm)
-        text.textLines(quantity)
-
-        total = line_item[3]
-        text.setTextOrigin(167.5*mm, (180 + line_item_offset)*mm)
-        text.textLines(total)
+        #total = line_item[3]
+        #text.setTextOrigin(167.5*mm, (180 + line_item_offset)*mm)
+        #text.textLines(total)
 
         line_item_offset -= 5
 
