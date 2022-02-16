@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import inspect
-from typing import Optional, List
+from typing import Optional, List, Dict
 from pydantic import BaseModel
 from pdf import generate_invoice
 from local_print import print_document
@@ -43,7 +43,7 @@ class InvoiceForm(BaseModel):
     postCode: str
     receiptAmount: str
     receiptNumber: str
-    lineItems: List[List[str]]
+    lineItems: List[Dict[str, str]]
     subtotal: str
     tax: str
     payDate: str
