@@ -8,7 +8,6 @@ from pydantic import BaseModel
 from pdf import generate_invoice
 from local_print import print_document
 from db import SqliteConnector
-from utility import snake_to_camel
 from copy import deepcopy
 from requests import post
 
@@ -34,30 +33,29 @@ app.add_middleware(
 
 
 class InvoiceForm(BaseModel):
-    firstName: str
-    lastName: str
-    invoiceDate: str
-    addressLine1: str
-    addressLine2: Optional[str] = None
+    first_name: str
+    last_name: str
+    invoice_date: str
+    address_line_1: str
+    address_line_2: Optional[str] = None
     city: str
-    postCode: str
-    receiptAmount: str
-    receiptNumber: str
-    lineItems: List[Dict[str, str]]
+    post_code: str
+    invoice_number: str
+    line_items: List[Dict[str, str]]
     subtotal: str
     tax: str
-    payDate: str
+    pay_date: str
     balance: str
     method: str
 
 
 class ClientForm(BaseModel):
-    firstName: str
-    lastName: str
-    addressLine1: str
-    addressLine2: Optional[str] = None
+    first_name: str
+    last_name: str
+    address_line_1: str
+    address_line_2: Optional[str] = None
     city: str
-    postCode: str
+    post_code: str
     method: str
 
 
@@ -117,8 +115,8 @@ def add_client_using_invoice(request_body: dict) -> None:
     client_invoice_form -- information on client submitted by caller.
     """
     request_body_copy = deepcopy(request_body)
-    del request_body_copy["receiptAmount"]
-    del request_body_copy["receiptNumber"]
+    del request_body_copy["receipt_amount"]
+    del request_body_copy["invoice_number"]
     request_body_copy["method"] = "add"
     add_client(request_body_copy)
 
@@ -165,7 +163,7 @@ def add_client(request_body: dict) -> list:
     """
     sqlite_connector = SqliteConnector("clients.db")
     sqlite_connector.enter_address(
-        tuple(request_body[snake_to_camel(key)] for key in 
+        tuple(request_body[key] for key in 
             client_db_row_schema)
     )
 
@@ -181,7 +179,7 @@ def remove_client(request_body: dict):
     """
     sqlite_connector = SqliteConnector("clients.db")
     result = sqlite_connector.remove_address(
-        tuple(request_body[snake_to_camel(key)] for key in 
+        tuple(request_body[key] for key in 
             client_db_row_schema)
     )
 
@@ -202,12 +200,12 @@ def search_client(request_body: dict) -> list:
     sqlite_connector = SqliteConnector("clients.db")
 
     results = sqlite_connector.search_address(
-        request_body["firstName"],
-        request_body["lastName"]
+        request_body["first_name"],
+        request_body["last_name"]
     )
     
     return([
-        {snake_to_camel(key): row[key] for key in row.keys()}
+        {key: row[key] for key in row.keys()}
         for row in results
     ])
 

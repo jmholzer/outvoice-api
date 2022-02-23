@@ -70,23 +70,23 @@ def read_first_page(input_file_path: str) -> PageObject:
 
 
 def generate_invoice_address_line(invoice_form: dict) -> str:
-    if invoice_form["addressLine2"]:
+    if invoice_form["address_line_2"]:
         return (
             '\n'.join([
-                invoice_form["firstName"] + ' ' + invoice_form["lastName"],
-                invoice_form["addressLine1"],
-                invoice_form["addressLine2"],
+                invoice_form["first_name"] + ' ' + invoice_form["last_name"],
+                invoice_form["address_line_1"],
+                invoice_form["address_line_2"],
                 invoice_form["city"],
-                invoice_form["postCode"]
+                invoice_form["post_code"]
             ])
         )
     else:
         return (
             '\n'.join([
-                invoice_form["firstName"] + ' ' + invoice_form["lastName"],
-                invoice_form["addressLine1"],
+                invoice_form["first_name"] + ' ' + invoice_form["last_name"],
+                invoice_form["address_line_1"],
                 invoice_form["city"],
-                invoice_form["postCode"]
+                invoice_form["post_code"]
             ])
         )
 
@@ -129,12 +129,12 @@ def format_invoice_form_input(invoice_form: dict) -> None:
     invoice_form["address"] = generate_invoice_address_line(invoice_form)
     # Delete keys that will no longer be used (=> cleaner iteration over invoice_form)
     for key in [
-        "firstName",
-        "lastName",
-        "addressLine1",
-        "addressLine2",
+        "first_name",
+        "last_name",
+        "address_line_1",
+        "address_line_2",
         "city",
-        "postCode"
+        "post_code"
     ]:
         del invoice_form[key]
     invoice_form["date"] = format_date(invoice_form["date"])
@@ -165,14 +165,14 @@ def generate_invoice_overlay(
     
     write_text_to_overlay(invoice_form["receiptNumber"], text, layout["invoice_number"])
 
-    date = format_date(invoice_form["invoiceDate"])
+    date = format_date(invoice_form["invoice_date"])
     write_text_to_overlay(date, text, layout["date"])
 
     address = generate_invoice_address_line(invoice_form)
     write_text_to_overlay(address, text, layout["address"])
 
     line_item_offset = 0
-    for line_item in invoice_form["lineItems"]:
+    for line_item in invoice_form["line_items"]:
         for key in line_item:
             write_text_to_overlay(
                 line_item[key],
@@ -190,7 +190,7 @@ def generate_invoice_overlay(
     text.setTextOrigin(167.5*mm, 112*mm)
     text.textLines(tax)
 
-    terms = "Pay on or before " + invoice_form["payDate"]
+    terms = "Pay on or before " + invoice_form["pay_date"]
     text.setTextOrigin(29.5*mm, 65*mm)
     text.textLines(terms)
 
@@ -242,9 +242,9 @@ def generate_output_path(invoice_form: dict) -> str:
     output_path = (
         "invoices/"
         + "_".join([
-            invoice_form["firstName"],
-            invoice_form["lastName"],
-            invoice_form["invoiceDate"],
+            invoice_form["first_name"],
+            invoice_form["last_name"],
+            invoice_form["invoice_date"],
             datetime.now().strftime("%H_%M_%S")
         ])
     )
@@ -259,13 +259,13 @@ def generate_invoice_pages(invoice_form: dict) -> List[PageObject]:
         invoice_form -- the form data used to generate the invoice.
     """
     page_template_path = generate_absolute_path("resources/invoice.pdf")
-    line_item_lists = generate_line_item_lists(invoice_form["lineItems"])
+    line_item_lists = generate_line_item_lists(invoice_form["line_items"])
     invoice_pages = []
 
     total_pages = len(line_item_lists)
     for page_number, line_item_list in enumerate(line_item_lists):
         invoice_form_copy = copy(invoice_form)
-        invoice_form_copy["lineItems"] = line_item_list
+        invoice_form_copy["line_items"] = line_item_list
 
         # Read the blank invoice
         invoice_page = read_first_page(page_template_path)
