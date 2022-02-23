@@ -1,4 +1,5 @@
 import io
+from operator import inv
 import os
 from json import load
 from PyPDF2 import PdfFileWriter, PdfFileReader
@@ -68,24 +69,24 @@ def read_first_page(input_file_path: str) -> PageObject:
     return in_.getPage(0)
 
 
-def generate_invoice_address_line(form: dict) -> str:
-    if form["addressLine2"]:
+def generate_invoice_address_line(invoice_form: dict) -> str:
+    if invoice_form["addressLine2"]:
         return (
             '\n'.join([
-                form["firstName"] + ' ' + form["lastName"],
-                form["addressLine1"],
-                form["addressLine2"],
-                form["city"],
-                form["postCode"]
+                invoice_form["firstName"] + ' ' + invoice_form["lastName"],
+                invoice_form["addressLine1"],
+                invoice_form["addressLine2"],
+                invoice_form["city"],
+                invoice_form["postCode"]
             ])
         )
     else:
         return (
             '\n'.join([
-                form["firstName"] + ' ' + form["lastName"],
-                form["addressLine1"],
-                form["city"],
-                form["postCode"]
+                invoice_form["firstName"] + ' ' + invoice_form["lastName"],
+                invoice_form["addressLine1"],
+                invoice_form["city"],
+                invoice_form["postCode"]
             ])
         )
 
@@ -116,6 +117,29 @@ def write_text_to_overlay(
     text.textLines(line)
 
 
+def format_invoice_form_input(invoice_form: dict) -> None:
+    """
+    Makes in-place formatting changes to the dict containing
+    the form input used to generate an invoice.
+
+    Arguments:
+    invoice_form -- data about the client passed from
+        the API end-point.
+    """
+    invoice_form["address"] = generate_invoice_address_line(invoice_form)
+    # Delete keys that will no longer be used (=> cleaner iteration over invoice_form)
+    for key in [
+        "firstName",
+        "lastName",
+        "addressLine1",
+        "addressLine2",
+        "city",
+        "postCode"
+    ]:
+        del invoice_form[key]
+    invoice_form["date"] = format_date(invoice_form["date"])
+    
+
 def generate_invoice_overlay(
         invoice_form: dict,
         page_number: int,
@@ -127,7 +151,7 @@ def generate_invoice_overlay(
 
     Arguments:
     invoice_form -- data about the client passed from
-        the API end-point
+        the API end-point.
     """
     relative_layout_file_path = "layouts/default.json"
     layout_file_path = generate_absolute_path(relative_layout_file_path)
@@ -151,12 +175,11 @@ def generate_invoice_overlay(
     for line_item in invoice_form["lineItems"]:
         for key in line_item:
             write_text_to_overlay(
-            line_item[key],
-            text,
-            layout["line_item"][key],
-            y_offset=line_item_offset
-        )
-
+                line_item[key],
+                text,
+                layout["line_item"][key],
+                y_offset=line_item_offset
+            )
         line_item_offset -= 5
 
     subtotal = invoice_form["subtotal"]
