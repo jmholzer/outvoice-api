@@ -5,7 +5,7 @@
         "x_origin": 29.5,
         "y_origin": 241.5
     },
-    "date": {
+    "invoice_date": {
         "font": "OpenSans",
         "size": 8,
         "x_origin": 65.5,
@@ -42,5 +42,29 @@
             "x_origin": 167.5,
             "y_origin": 180
         }
+    },
+    "subtotal": {
+        "font": "OpenSans",
+        "size": 8,
+        "x_origin": 167.5,
+        "y_origin": 117
+    },
+    "tax": {
+        "font": "OpenSans",
+        "size": 8,
+        "x_origin": 167.5,
+        "y_origin": 112
+    },
+    "terms": {
+        "font": "OpenSans",
+        "size": 8,
+        "x_origin": 29.5,
+        "y_origin": 65
+    },
+    "balance": {
+        "font": "OpenSans",
+        "size": 14,
+        "x_origin": 159,
+        "y_origin": 85
     }
 }
