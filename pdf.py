@@ -188,6 +188,33 @@ def write_line_items(
         line_item_offset -= 5
 
 
+def write_page_number(
+        text: PDFTextObject,
+        page_number: int,
+        total_pages: int,
+        layout: Dict[str,Dict[str,str]]
+    ) -> None:
+    """
+    Write a page number and (if necessary) a 'turnover prompt' to 
+    the supplied text object (invoice page)
+
+    Arguments:
+    text -- the reportlab PDFTextObject object attached to the overlay canvas.
+    page_number -- the number of the page being written on.
+    total_pages -- the total number of pages in the invoice.
+    layout -- a dict that contains the following fields:
+            x_origin -- the x position (mm) to start the text at on the overlay.
+            y_origin -- the y position (mm) to start the text at on the overlay.
+            font -- the font to use for the text to write.
+            size -- the size of the text to write.
+    """
+    page_number_line = f"Page {page_number + 1} of {total_pages}"
+    write_text_to_overlay(page_number_line, text, layout["page_number_line"])
+    if page_number + 1 < total_pages:
+        turn_over_line = "(Invoice continues overleaf)"
+        write_text_to_overlay(turn_over_line, text, layout["turn_over_line"])
+
+
 def generate_invoice_overlay(
         invoice_form: dict,
         page_number: int,
@@ -211,22 +238,13 @@ def generate_invoice_overlay(
     invoice_layer_canvas.setPageSize((A4))
     text = invoice_layer_canvas.beginText()
 
-    for field in layout:
-        if field == "line_item":
-            write_line_items(text, invoice_form["line_items"], layout["line_item"])
+    for field in invoice_form:
+        if field == "line_items":
+            write_line_items(text, invoice_form["line_items"], layout["line_items"])
             continue
         write_text_to_overlay(invoice_form[field], text, layout[field])
     
-    page_number_line = f"Page {page_number + 1} of {total_pages}"
-    text.setTextOrigin(180*mm, 10*mm)
-    text.setFont('OpenSans', 8)
-    text.textLines(page_number_line)
-
-    if page_number + 1 < total_pages:
-        turn_over_line = "(Invoice continues overleaf)"
-        text.setTextOrigin(159*mm, 80*mm)
-        text.setFont('OpenSans-Italic', 8)
-        text.textLines(turn_over_line)
+    write_page_number(text, page_number, total_pages, layout)
 
     invoice_layer_canvas.drawText(text)
     invoice_layer_canvas.save()
