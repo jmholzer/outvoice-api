@@ -96,7 +96,7 @@ def format_date(invoice_form: dict):
     invoice_form["date"] = datetime.strptime(invoice_form["date"], "%Y-%m-%d").strftime("%d/%m/%Y")
 
 
-def format_address_line(invoice_form: dict) -> str:
+def format_address_line(invoice_form: dict) -> None:
     """
     Add formatted address line to invoice_form in-place.
 
