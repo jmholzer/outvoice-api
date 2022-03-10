@@ -93,8 +93,9 @@ def format_date(invoice_form: dict):
     invoice_form -- data about the client passed from
         the API end-point.
     """
-    invoice_form["date"] = datetime.strptime(invoice_form["date"], "%Y-%m-%d").strftime("%d/%m/%Y")
-
+    invoice_date = datetime.strptime(invoice_form["invoice_date"], "%Y-%m-%d")
+    invoice_date = invoice_date.strftime("%d/%m/%Y")
+    invoice_form["invoice_date"] = invoice_date
 
 def format_address_line(invoice_form: dict) -> None:
     """
@@ -203,9 +204,10 @@ def generate_invoice_overlay(
     text = invoice_layer_canvas.beginText()
 
     for field in layout:
-        write_text_to_overlay(field, text, layout[field])
         if field == "line_item":
             write_line_items(text, invoice_form["line_items"], layout["line_item"])
+            continue
+        write_text_to_overlay(invoice_form[field], text, layout[field])
     
     page_number_line = f"Page {page_number + 1} of {total_pages}"
     text.setTextOrigin(180*mm, 10*mm)
@@ -299,6 +301,7 @@ def generate_invoice(invoice_form: dict) -> str:
 
     # invoice is an object that stores all generated invoice pages.
     invoice = PdfFileWriter()
+    format_invoice_form_input(invoice_form)
     invoice_pages = generate_invoice_pages(invoice_form)
     for i, invoice_page in enumerate(invoice_pages):
         invoice.insertPage(invoice_page, i)
