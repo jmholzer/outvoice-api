@@ -21,17 +21,6 @@ pdfmetrics.registerFont(TTFont('OpenSans', 'OpenSans-Regular.ttf'))
 pdfmetrics.registerFont(TTFont('OpenSans-Italic', 'OpenSans-Italic.ttf'))
 
 
-def format_date(date):
-    """
-    Convert the date from the format received in
-    the API call to a UK-formatted date
-
-    Arguments:
-    date -- date received in API call
-    """
-    return datetime.strptime(date, "%Y-%m-%d").strftime("%d/%m/%Y")
-
-
 def generate_absolute_path(relative_path: str) -> str:
     """
     Generate an absolute path to a file.
@@ -69,28 +58,6 @@ def read_first_page(input_file_path: str) -> PageObject:
     return in_.getPage(0)
 
 
-def generate_invoice_address_line(invoice_form: dict) -> str:
-    if invoice_form["address_line_2"]:
-        return (
-            '\n'.join([
-                invoice_form["first_name"] + ' ' + invoice_form["last_name"],
-                invoice_form["address_line_1"],
-                invoice_form["address_line_2"],
-                invoice_form["city"],
-                invoice_form["post_code"]
-            ])
-        )
-    else:
-        return (
-            '\n'.join([
-                invoice_form["first_name"] + ' ' + invoice_form["last_name"],
-                invoice_form["address_line_1"],
-                invoice_form["city"],
-                invoice_form["post_code"]
-            ])
-        )
-
-
 def write_text_to_overlay(
         line: str,
         text: PDFTextObject,
@@ -117,17 +84,45 @@ def write_text_to_overlay(
     text.textLines(line)
 
 
-def format_invoice_form_input(invoice_form: dict) -> None:
+def format_date(invoice_form: dict):
     """
-    Makes in-place formatting changes to the dict containing
-    the form input used to generate an invoice.
+    Convert date from the format received in the API call to
+    a localised (British) date in-place.
 
     Arguments:
     invoice_form -- data about the client passed from
         the API end-point.
     """
-    invoice_form["address"] = generate_invoice_address_line(invoice_form)
-    # Delete keys that will no longer be used (=> cleaner iteration over invoice_form)
+    invoice_form["date"] = datetime.strptime(invoice_form["date"], "%Y-%m-%d").strftime("%d/%m/%Y")
+
+
+def format_address_line(invoice_form: dict) -> str:
+    """
+    Add formatted address line to invoice_form in-place.
+
+    Arguments:
+    invoice_form -- data about the client passed from
+        the API end-point.
+    """
+    invoice_form["address"] = (
+        '\n'.join([
+            invoice_form["first_name"] + ' ' + invoice_form["last_name"],
+            invoice_form["address_line_1"],
+            invoice_form.get("address_line_2", ""),
+            invoice_form["city"],
+            invoice_form["post_code"]
+        ])
+    )
+
+def delete_unused_keys(invoice_form: dict) -> None:
+    """
+    Delete the keys (in-place) that are no longer used as 
+    a result of generating formatted output strings.
+
+    Arguments:
+    invoice_form -- data about the client passed from
+        the API end-point.
+    """
     for key in [
         "first_name",
         "last_name",
@@ -137,7 +132,20 @@ def format_invoice_form_input(invoice_form: dict) -> None:
         "post_code"
     ]:
         del invoice_form[key]
-    invoice_form["date"] = format_date(invoice_form["date"])
+
+
+def format_invoice_form_input(invoice_form: dict) -> None:
+    """
+    Makes in-place formatting changes to the dict containing
+    the form input used to generate an invoice.
+
+    Arguments:
+    invoice_form -- data about the client passed from
+        the API end-point.
+    """
+    format_address_line(invoice_form)
+    format_date(invoice_form)
+    delete_unused_keys(invoice_form)
     
 
 def generate_invoice_overlay(
