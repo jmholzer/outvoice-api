@@ -14,7 +14,7 @@ from reportlab.pdfgen.canvas import Canvas
 from reportlab.pdfgen.textobject import PDFTextObject
 from datetime import datetime
 from copy import copy
-from typing import List, Optional
+from typing import List, Dict, Optional
 
 
 pdfmetrics.registerFont(TTFont('OpenSans', 'OpenSans-Regular.ttf'))
@@ -114,6 +114,18 @@ def format_address_line(invoice_form: dict) -> str:
         ])
     )
 
+
+def format_terms_line(invoice_form: dict) -> None:
+    """
+    Add a line informing the customer of the terms of the invoice.
+
+    Arguments:
+    invoice_form -- data about the client passed from
+        the API end-point.
+    """
+    invoice_form["terms"] = "Pay on or before " + invoice_form["pay_date"]
+
+
 def delete_unused_keys(invoice_form: dict) -> None:
     """
     Delete the keys (in-place) that are no longer used as 
@@ -129,7 +141,8 @@ def delete_unused_keys(invoice_form: dict) -> None:
         "address_line_1",
         "address_line_2",
         "city",
-        "post_code"
+        "post_code",
+        "pay_date"
     ]:
         del invoice_form[key]
 
@@ -145,8 +158,26 @@ def format_invoice_form_input(invoice_form: dict) -> None:
     """
     format_address_line(invoice_form)
     format_date(invoice_form)
+    format_terms_line(invoice_form)
     delete_unused_keys(invoice_form)
-    
+
+
+def write_line_items(
+        text: PDFTextObject,
+        line_items: List[Dict[str,str]],
+        layout: Dict[str,str]
+    ) -> None:
+    line_item_offset = 0
+    for line_item in line_items:
+        for key in line_item:
+            write_text_to_overlay(
+                line_item[key],
+                text,
+                layout[key],
+                y_offset=line_item_offset
+            )
+        line_item_offset -= 5
+
 
 def generate_invoice_overlay(
         invoice_form: dict,
@@ -170,43 +201,12 @@ def generate_invoice_overlay(
     invoice_layer_canvas = canvas.Canvas(packet)
     invoice_layer_canvas.setPageSize((A4))
     text = invoice_layer_canvas.beginText()
+
+    for field in layout:
+        write_text_to_overlay(field, text, layout[field])
+        if field == "line_item":
+            write_line_items(text, invoice_form["line_items"], layout["line_item"])
     
-    write_text_to_overlay(invoice_form["receiptNumber"], text, layout["invoice_number"])
-
-    date = format_date(invoice_form["invoice_date"])
-    write_text_to_overlay(date, text, layout["date"])
-
-    address = generate_invoice_address_line(invoice_form)
-    write_text_to_overlay(address, text, layout["address"])
-
-    line_item_offset = 0
-    for line_item in invoice_form["line_items"]:
-        for key in line_item:
-            write_text_to_overlay(
-                line_item[key],
-                text,
-                layout["line_item"][key],
-                y_offset=line_item_offset
-            )
-        line_item_offset -= 5
-
-    subtotal = invoice_form["subtotal"]
-    text.setTextOrigin(167.5*mm, 117*mm)
-    text.textLines(subtotal)
-
-    tax = invoice_form["tax"]
-    text.setTextOrigin(167.5*mm, 112*mm)
-    text.textLines(tax)
-
-    terms = "Pay on or before " + invoice_form["pay_date"]
-    text.setTextOrigin(29.5*mm, 65*mm)
-    text.textLines(terms)
-
-    balance = invoice_form["balance"]
-    text.setTextOrigin(159*mm, 85*mm)
-    text.setFont('OpenSans', 14)
-    text.textLines(balance)
-
     page_number_line = f"Page {page_number + 1} of {total_pages}"
     text.setTextOrigin(180*mm, 10*mm)
     text.setFont('OpenSans', 8)
