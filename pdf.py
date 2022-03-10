@@ -168,6 +168,14 @@ def write_line_items(
         line_items: List[Dict[str,str]],
         layout: Dict[str,str]
     ) -> None:
+    """
+    Write a given array of line items to the supplied text object (invoice page).
+
+    Arguments:
+    text -- the reportlab PDFTextObject object attached to the overlay canvas.
+    line_items -- the array of line items to write.
+    layout -- a dict containing information on position and style of text.
+    """
     line_item_offset = 0
     for line_item in line_items:
         for key in line_item:
