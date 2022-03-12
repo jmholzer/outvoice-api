@@ -21,6 +21,10 @@ pdfmetrics.registerFont(TTFont('OpenSans', 'OpenSans-Regular.ttf'))
 pdfmetrics.registerFont(TTFont('OpenSans-Italic', 'OpenSans-Italic.ttf'))
 
 
+# Name of the layout to use to generate the invoice.
+LAYOUT_NAME = "default"
+
+
 def generate_absolute_path(relative_path: str) -> str:
     """
     Generate an absolute path to a file.
@@ -96,6 +100,7 @@ def format_date(invoice_form: dict):
     invoice_date = datetime.strptime(invoice_form["invoice_date"], "%Y-%m-%d")
     invoice_date = invoice_date.strftime("%d/%m/%Y")
     invoice_form["invoice_date"] = invoice_date
+
 
 def format_address_line(invoice_form: dict) -> None:
     """
@@ -192,7 +197,7 @@ def write_page_number(
         text: PDFTextObject,
         page_number: int,
         total_pages: int,
-        layout: Dict[str,Dict[str,str]]
+        layout: Dict[str, Dict[str, str]]
     ) -> None:
     """
     Write a page number and (if necessary) a 'turnover prompt' to 
@@ -216,7 +221,8 @@ def write_page_number(
 
 
 def generate_invoice_overlay(
-        invoice_form: dict,
+        invoice_form: Dict[str,str],
+        layout: Dict[str,str],
         page_number: int,
         total_pages: int
     ) -> PageObject:
@@ -227,12 +233,7 @@ def generate_invoice_overlay(
     Arguments:
     invoice_form -- data about the client passed from
         the API end-point.
-    """
-    relative_layout_file_path = "layouts/default.json"
-    layout_file_path = generate_absolute_path(relative_layout_file_path)
-    with open(layout_file_path, "r") as layout_file:
-        layout = load(layout_file)
-
+    """    
     packet = io.BytesIO()
     invoice_layer_canvas = canvas.Canvas(packet)
     invoice_layer_canvas.setPageSize((A4))
@@ -249,7 +250,6 @@ def generate_invoice_overlay(
     invoice_layer_canvas.drawText(text)
     invoice_layer_canvas.save()
     packet.seek(0)
-
     return PdfFileReader(packet).getPage(0)
 
 
@@ -287,16 +287,31 @@ def generate_output_path(invoice_form: dict) -> str:
     return generate_absolute_path(output_path)
 
 
+def read_layout_file(layout_name):
+    """
+    Read the layout file with the specified name and return the dict
+    loaded from the json therein.
+
+    Arguments:
+    layout_name -- the name of the layout to read.
+    """
+    file_path = generate_absolute_path(f"layouts/{layout_name}.json")
+    with open(file_path, "r") as layout_file:
+        layout = load(layout_file)
+    return layout
+
+
 def generate_invoice_pages(invoice_form: dict) -> List[PageObject]:
     """
     Returns a list of finished invoice pages (PageObjects).
 
     Arguments:
-        invoice_form -- the form data used to generate the invoice.
+    invoice_form -- the form data used to generate the invoice.
     """
     page_template_path = generate_absolute_path("resources/invoice.pdf")
     line_item_lists = generate_line_item_lists(invoice_form["line_items"])
     invoice_pages = []
+    layout = read_layout_file(LAYOUT_NAME)
 
     total_pages = len(line_item_lists)
     for page_number, line_item_list in enumerate(line_item_lists):
@@ -306,7 +321,7 @@ def generate_invoice_pages(invoice_form: dict) -> List[PageObject]:
         # Read the blank invoice
         invoice_page = read_first_page(page_template_path)
         # Generate an overlay using client data
-        overlay = generate_invoice_overlay(invoice_form_copy, page_number, total_pages)
+        overlay = generate_invoice_overlay(invoice_form_copy, layout, page_number, total_pages)
         # Merge the overlay on top of the blank invoice.
         invoice_page.mergePage(overlay)
         # Add page to the finished invoice.
@@ -321,7 +336,7 @@ def generate_invoice(invoice_form: dict) -> str:
     Returns absolute path of saved invoice.
 
     Arguments:
-        invoice_form -- the form data used to generate the invoice.
+    invoice_form -- the form data used to generate the invoice.
     """
     output_path = generate_output_path(invoice_form)
 
