@@ -115,7 +115,6 @@ def add_client_using_invoice(request_body: dict) -> None:
     client_invoice_form -- information on client submitted by caller.
     """
     request_body_copy = deepcopy(request_body)
-    #del request_body_copy["receipt_amount"]
     del request_body_copy["invoice_number"]
     request_body_copy["method"] = "add"
     add_client(request_body_copy)
