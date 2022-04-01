@@ -1,5 +1,4 @@
 import io
-from operator import inv
 import os
 from json import load
 from PyPDF2 import PdfFileWriter, PdfFileReader
