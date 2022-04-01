@@ -87,6 +87,21 @@ def write_text_to_overlay(
     text.textLines(line)
 
 
+def add_tax_and_total(invoice_form: dict):
+    """
+    Calculate the payable tax using the (decimal) tax rate in the
+    invoice form dictionary and the corresponding total amount to pay.
+
+    Arguments:
+    invoice_form -- data about the client passed from
+        the API end-point.
+    """
+    tax = f"{float(invoice_form['tax']) * float(invoice_form['subtotal']):.2f}"
+    balance = f"{tax * float(invoice_form['subtotal']):.2f}"
+    invoice_form["tax"] = tax
+    invoice_form["balance"] = balance
+
+
 def format_date(invoice_form: dict):
     """
     Convert date from the format received in the API call to
