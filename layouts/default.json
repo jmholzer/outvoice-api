@@ -30,7 +30,7 @@
             "x_origin": 117,
             "y_origin": 180
         },
-        "quantity": {
+        "count": {
             "font": "OpenSans",
             "size": 8,
             "x_origin": 149,
