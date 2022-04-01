@@ -35,19 +35,19 @@ app.add_middleware(
 class InvoiceForm(BaseModel):
     first_name: str
     last_name: str
-    invoice_date: str
     address_line_1: str
     address_line_2: Optional[str] = None
     city: str
     post_code: str
     invoice_number: str
-    line_items: List[Dict[str, str]]
-    subtotal: str
-    tax: str
+    invoice_date: str
     pay_date: str
-    balance: str
+    line_items: List[Dict[str, str]]
+    tax: str
+    subtotal: str
+    email_address: str
+    cc_email_address: str
     method: str
-
 
 class ClientForm(BaseModel):
     first_name: str
