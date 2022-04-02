@@ -124,14 +124,17 @@ def format_address_line(invoice_form: dict) -> None:
     invoice_form -- data about the client passed from
         the API end-point.
     """
+    address = [
+        invoice_form["first_name"] + ' ' + invoice_form["last_name"],
+        invoice_form["address_line_1"],
+        invoice_form["city"],
+        invoice_form["post_code"]
+    ]
+    address_line_2 = invoice_form.get("address_line_2", "")
+    if address_line_2:
+        address.insert(2, address_line_2)
     invoice_form["address"] = (
-        '\n'.join([
-            invoice_form["first_name"] + ' ' + invoice_form["last_name"],
-            invoice_form["address_line_1"],
-            invoice_form.get("address_line_2", ""),
-            invoice_form["city"],
-            invoice_form["post_code"]
-        ])
+        '\n'.join(address)
     )
 
 
