@@ -142,7 +142,6 @@ def add_line_items_amount(invoice_form: dict):
         cost_per_item = float(line_item["cost_per_item"])
         count = float(line_item["count"])
         line_item["amount"] = f"{(cost_per_item * count):.2f}"
-    print(invoice_form["line_items"])
 
 
 def format_line_items(invoice_form: dict):
@@ -181,9 +180,13 @@ def format_date(invoice_form: dict):
     invoice_form -- data about the client passed from
         the API end-point.
     """
-    invoice_date = datetime.strptime(invoice_form["invoice_date"], "%Y-%m-%d")
-    invoice_date = invoice_date.strftime("%d/%m/%Y")
-    invoice_form["invoice_date"] = invoice_date
+    for key in [
+        "invoice_date",
+        "pay_date"
+    ]:
+        date = datetime.strptime(invoice_form[key], "%Y-%m-%d")
+        date = date.strftime("%d/%m/%Y")
+        invoice_form[key] = date
 
 
 def format_address_line(invoice_form: dict) -> None:
