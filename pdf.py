@@ -219,7 +219,7 @@ def format_terms_line(invoice_form: dict) -> None:
     invoice_form -- data about the client passed from
         the API end-point.
     """
-    invoice_form["terms"] = "Pay on or before " + invoice_form["pay_date"]
+    invoice_form["terms"] = f"Pay on or before {invoice_form['pay_date']}."
 
 
 def delete_unused_keys(invoice_form: dict) -> None:
