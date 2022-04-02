@@ -1,5 +1,3 @@
-import re
-from turtle import st
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,11 +5,8 @@ import inspect
 from typing import Optional, List, Dict
 from pydantic import BaseModel
 from pdf import generate_invoice
-from local_print import print_document
 from db import SqliteConnector
 from copy import deepcopy
-from requests import post
-
 
 app = FastAPI()
 
@@ -106,18 +101,6 @@ def download_invoice(request_body: dict) -> FileResponse:
     )
 
 
-def print_invoice(request_body: dict) -> None:
-    """
-    Send a pdf of an invoice to a printer attached
-    to the linux computer running the api process.
-
-    Arguments:
-    request_body -- information on client submitted by caller.
-    """
-    invoice_file_path = generate_invoice(request_body)
-    print_document(invoice_file_path)
-
-
 def add_client_using_invoice(request_body: dict) -> None:
     """
     Helper function for converting an invoice generation
@@ -156,7 +139,7 @@ async def root(client_invoice_form: InvoiceForm):
 
     method_routes = {
         "download": download_invoice,
-        "print": print_invoice
+        "email": email_invoice
     }
 
     method = request_body["method"]
