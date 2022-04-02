@@ -159,6 +159,19 @@ def format_line_items(invoice_form: dict):
         line_item["cost_per_item"] = cost_per_item
 
 
+def format_subtotal_tax_and_balance(invoice_form: dict):
+    """
+    Formats the subtotal, tax and balance strings.
+
+    Arguments:
+    invoice_form -- data about the client passed from
+        the API end-point.
+    """
+    invoice_form["subtotal"] = format_quantity_string(invoice_form["subtotal"])
+    invoice_form["tax"] = format_quantity_string(invoice_form["tax"])
+    invoice_form["balance"] = format_currency_string(invoice_form["balance"], "£")
+
+
 def format_date(invoice_form: dict):
     """
     Convert date from the format received in the API call to
@@ -238,6 +251,8 @@ def format_invoice_form_input(invoice_form: dict) -> None:
     """
     add_tax_and_balance(invoice_form)
     add_line_items_amount(invoice_form)
+    format_line_items(invoice_form)
+    format_subtotal_tax_and_balance(invoice_form)
     format_address_line(invoice_form)
     format_date(invoice_form)
     format_terms_line(invoice_form)
