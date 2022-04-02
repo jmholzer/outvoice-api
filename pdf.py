@@ -97,7 +97,7 @@ def add_tax_and_total(invoice_form: dict):
         the API end-point.
     """
     tax = f"{float(invoice_form['tax']) * float(invoice_form['subtotal']):.2f}"
-    balance = f"{tax * float(invoice_form['subtotal']):.2f}"
+    balance = f"{float(tax) * float(invoice_form['subtotal']):.2f}"
     invoice_form["tax"] = tax
     invoice_form["balance"] = balance
 
@@ -176,6 +176,7 @@ def format_invoice_form_input(invoice_form: dict) -> None:
     invoice_form -- data about the client passed from
         the API end-point.
     """
+    add_tax_and_total(invoice_form)
     format_address_line(invoice_form)
     format_date(invoice_form)
     format_terms_line(invoice_form)
