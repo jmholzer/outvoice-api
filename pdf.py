@@ -87,7 +87,30 @@ def write_text_to_overlay(
     text.textLines(line)
 
 
-def add_tax_and_total(invoice_form: dict):
+def format_currency_string(string_to_format: str, currency_symbol: str) -> str:
+    """
+    Formats a given string representing a decimal number and
+    return it represented with two decimal points and a given
+    currency symbol.
+
+    Arguments:
+    string_to_format -- the string to format.
+    """
+    return f"{currency_symbol}{float(string_to_format):.2f}"
+
+
+def format_quantity_string(string_to_format: str) -> str:
+    """
+    Formats a given string representing a decimal number and
+    return it represented with two decimal points.
+
+    Arguments:
+    string_to_format -- the string to format.
+    """
+    return f"{float(string_to_format):.2f}"
+
+
+def add_tax_and_balance(invoice_form: dict):
     """
     Calculate the payable tax using the (decimal) tax rate in the
     invoice form dictionary and the corresponding total amount to pay.
@@ -96,10 +119,44 @@ def add_tax_and_total(invoice_form: dict):
     invoice_form -- data about the client passed from
         the API end-point.
     """
-    tax = f"{float(invoice_form['tax']) * float(invoice_form['subtotal']):.2f}"
-    balance = f"{float(tax) * float(invoice_form['subtotal']):.2f}"
-    invoice_form["tax"] = tax
-    invoice_form["balance"] = balance
+    invoice_form["tax"] = str(
+        float(invoice_form['tax'])
+        * float(invoice_form['subtotal'])
+    )
+    invoice_form["balance"] = str(
+        float(invoice_form["tax"] )
+        + float(invoice_form['subtotal'])
+    )
+
+
+def add_line_items_amount(invoice_form: dict):
+    """
+    Calculate the amount due for each line item and add these values
+    to the line_items dictionary in the invoice form dictionary.
+
+    Arguments:
+    invoice_form -- data about the client passed from
+        the API end-point.
+    """
+    for line_item in invoice_form["line_items"]:
+        cost_per_item = float(line_item["cost_per_item"])
+        count = float(line_item["count"])
+        line_item["amount"] = f"{(cost_per_item * count):.2f}"
+    print(invoice_form["line_items"])
+
+
+def format_line_items(invoice_form: dict):
+    """
+    Formats the strings included in the each of the dicts in the
+    line items array.
+
+    Arguments:
+    invoice_form -- data about the client passed from
+        the API end-point.
+    """
+    for line_item in invoice_form["line_items"]:
+        cost_per_item = format_quantity_string(line_item["cost_per_item"])
+        line_item["cost_per_item"] = cost_per_item
 
 
 def format_date(invoice_form: dict):
@@ -179,7 +236,8 @@ def format_invoice_form_input(invoice_form: dict) -> None:
     invoice_form -- data about the client passed from
         the API end-point.
     """
-    add_tax_and_total(invoice_form)
+    add_tax_and_balance(invoice_form)
+    add_line_items_amount(invoice_form)
     format_address_line(invoice_form)
     format_date(invoice_form)
     format_terms_line(invoice_form)
