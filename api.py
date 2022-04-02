@@ -1,3 +1,4 @@
+import re
 from turtle import st
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
@@ -79,6 +80,18 @@ def get_request_fields(request_cls):
     ]
 
 
+def strip_emails_from_request(request_body: dict) -> FileResponse:
+    """
+    Deletes the key-value pairs for email addresses, which are not
+    required in order to generate in invoice.
+
+    Arguments:
+    request_body -- information on client submitted by caller.
+    """
+    del request_body["email_address"]
+    del request_body["cc_email_address"]
+
+
 def download_invoice(request_body: dict) -> FileResponse:
     """
     Returns a pdf file of an invoice.
@@ -86,7 +99,7 @@ def download_invoice(request_body: dict) -> FileResponse:
     Arguments:
     request_body -- information on client submitted by caller.
     """
-
+    strip_emails_from_request(request_body)
     invoice = generate_invoice(request_body)
     return FileResponse(invoice,
         media_type="application/pdf",
