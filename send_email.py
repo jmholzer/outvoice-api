@@ -1,10 +1,9 @@
-from socketserver import ThreadingUnixDatagramServer
 from typing import Dict
 import boto3
 from botocore.exceptions import ClientError
-import os
 import json
 from email.mime.multipart import MIMEMultipart
+from utility import generate_absolute_path
 
 class EmailManager():
     """
@@ -23,17 +22,12 @@ class EmailManager():
     def get_sender(self) -> None:
         """
         Initialises a dict containing information on the sender
-        (name, email address) from a file representing the company
-        controlling the instance of outvoice.
+        (name, email address) from a file representing the
+        company controlling the instance of outvoice.
         """
-        self.sender = json.load()
-
-    def generate_greeting(self) -> str:
-        """
-        Generates the greeting to use in an email based on the time of day
-        (UK time zone).
-        """
-        pass
+        company_file_path = generate_absolute_path("/company_information/company.json")
+        with open(company_file_path) as company_file:
+            self.sender = json.load(company_file)
 
     def send_email(
             self,
