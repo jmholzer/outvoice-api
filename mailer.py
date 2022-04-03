@@ -7,19 +7,26 @@ from utility import generate_absolute_path
 
 class EmailManager():
     """
-    TODO: Docstring 
+    Manage building and sending emails with attachments to clients on behalf
+    of companies, using an email enabled for use with AWS SES (Amazon Web
+    Services Simple Email Service)
+
+    Attributes:
+        ses_client: the interface to the AWS SES API in Python.
+        sender: a dict containing the name and client-facing email of the
+            company controlling the outvoice instance.
     """
 
     def __init__(self):
         # Set object values with function calls
-        self.init_ses_client()
+        self.ses_client = self.init_ses_client()
         # Read the name of the company controlling the outvoice instance
-        self.get_sender(self)
+        self.sender = self.init_sender(self)
 
     def init_ses_client(self):
-        self.ses_client = boto3.client('ses', region_name="eu-central-1")
+        return boto3.client('ses', region_name="eu-central-1")
 
-    def get_sender(self) -> None:
+    def init_sender(self) -> None:
         """
         Initialises a dict containing information on the sender
         (name, email address) from a file representing the
@@ -27,7 +34,7 @@ class EmailManager():
         """
         company_file_path = generate_absolute_path("/company_information/company.json")
         with open(company_file_path) as company_file:
-            self.sender = json.load(company_file)
+            return json.load(company_file)
 
     def construct_email(self, invoice_file_path: str):
         """
