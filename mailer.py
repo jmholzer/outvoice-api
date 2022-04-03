@@ -29,6 +29,16 @@ class EmailManager():
         with open(company_file_path) as company_file:
             self.sender = json.load(company_file)
 
+    def construct_email(self, invoice_file_path: str):
+        """
+        Creates a multipart MIME message with a subject, html message body and
+        attached invoice, ready to be sent by EmailManager.send_email.
+
+        Arguments:
+        invoice_file_path: absolute path of the invoice to be attached.
+        """
+        pass
+
     def send_email(
             self,
             recipient: str,
@@ -59,3 +69,5 @@ class EmailManager():
                 return True
         except ClientError as e:
             return False
+    
+    
