@@ -380,7 +380,7 @@ def read_layout_file(layout_name):
     Arguments:
     layout_name -- the name of the layout to read.
     """
-    file_path = generate_absolute_path(f"layouts/{layout_name}.json")
+    file_path = generate_absolute_path(f"/resources/layouts/{layout_name}.json")
     with open(file_path, "r") as layout_file:
         layout = load(layout_file)
     return layout
@@ -393,7 +393,7 @@ def generate_invoice_pages(invoice_form: dict) -> List[PageObject]:
     Arguments:
     invoice_form -- the form data used to generate the invoice.
     """
-    page_template_path = generate_absolute_path("resources/invoice.pdf")
+    page_template_path = generate_absolute_path("resources/templates/invoice.pdf")
     line_item_lists = generate_line_item_lists(invoice_form["line_items"])
     invoice_pages = []
     layout = read_layout_file(LAYOUT_NAME)
