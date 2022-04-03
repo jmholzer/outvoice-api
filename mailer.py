@@ -3,6 +3,8 @@ import boto3
 from botocore.exceptions import ClientError
 import json
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
 from utility import generate_absolute_path
 
 class EmailManager():
@@ -29,12 +31,36 @@ class EmailManager():
     def init_sender(self) -> None:
         """
         Initialises a dict containing information on the sender
-        (name, email address) from a file representing the
-        company controlling the instance of outvoice.
+        (name, email address) from a file representing the company controlling
+        the instance of outvoice.
         """
-        company_file_path = generate_absolute_path("/company_information/company.json")
+        company_file_path = generate_absolute_path("/resources/company/company.json")
         with open(company_file_path) as company_file:
             return json.load(company_file)
+
+    def read_body(self) -> str:
+        """
+        Reads the html body from a file with fixed, predetermined location.
+        """
+        html_file_path = generate_absolute_path("/resources/email/body.html")
+        with open(html_file_path, "r") as html_file:
+            return html_file.read()
+
+    def format_body(self, html_body: str, invoice_meta: dict) -> str:
+        """
+        Formats the supplied email html body with values specific to the 
+
+        Arguments:
+        html_body -- a string containing the html body of the email.
+        invoice_meta -- a dict containing the meta data on the invoice
+            necessary to address the client.
+        """
+        html_body.format(
+            first_name=invoice_meta["first_name"],
+            sender=self.sender["company_name"],
+            invoice_date=invoice_meta["invoice_date"],
+        )
+        return html_body
 
     def construct_email(self, invoice_file_path: str):
         """
@@ -44,7 +70,8 @@ class EmailManager():
         Arguments:
         invoice_file_path: absolute path of the invoice to be attached.
         """
-        pass
+        message = MIMEMultipart("mixed")
+        #message["Subject"] = 
 
     def send_email(
             self,
