@@ -1,5 +1,4 @@
 import io
-import os
 from json import load
 from PyPDF2 import PdfFileWriter, PdfFileReader
 from PyPDF2.pdf import PageObject
@@ -14,25 +13,17 @@ from reportlab.pdfgen.textobject import PDFTextObject
 from datetime import datetime
 from copy import copy
 from typing import List, Dict, Optional
+from utility import generate_absolute_path
 
 
-pdfmetrics.registerFont(TTFont('OpenSans', 'OpenSans-Regular.ttf'))
-pdfmetrics.registerFont(TTFont('OpenSans-Italic', 'OpenSans-Italic.ttf'))
-
-
+#TODO: move this to a file, don't have this hardcoded
 # Name of the layout to use to generate the invoice.
 LAYOUT_NAME = "default"
 
-
-def generate_absolute_path(relative_path: str) -> str:
-    """
-    Generate an absolute path to a file.
-
-    Arguments:
-    relative_path -- path relative to current script. 
-    """
-    path_to_script = os.path.dirname(os.path.abspath(__file__))
-    return path_to_script + "/" + relative_path
+# TODO: read the fonts to use from the layouts file, don't hardcode.
+# Register the fonts used.
+pdfmetrics.registerFont(TTFont('OpenSans', 'OpenSans-Regular.ttf'))
+pdfmetrics.registerFont(TTFont('OpenSans-Italic', 'OpenSans-Italic.ttf'))
 
 
 def write_page_to_file(page: PageObject, output_file_path: str) -> None:

@@ -1,3 +1,5 @@
+import os
+
 def snake_to_camel(snake_str: str, lower_first: bool = True) -> str:
     """
     Returns a given snake_case string in camelCase (/ CamelCase).
@@ -17,3 +19,14 @@ def snake_to_camel(snake_str: str, lower_first: bool = True) -> str:
     if not lower_first:
         result = result.capitalize()
     return result
+
+
+def generate_absolute_path(relative_path: str) -> str:
+    """
+    Generate an absolute path to a file.
+
+    Arguments:
+    relative_path -- path relative to current script. 
+    """
+    path_to_script = os.path.dirname(os.path.abspath(__file__))
+    return path_to_script + "/" + relative_path
