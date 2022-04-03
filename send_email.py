@@ -1,3 +1,4 @@
+from socketserver import ThreadingUnixDatagramServer
 from typing import Dict
 import boto3
 from botocore.exceptions import ClientError
@@ -42,7 +43,8 @@ class EmailManager():
         ) -> bool:
         """
         Sends a MIME multipart email with a subject, html message body and
-        attached invoice, returns a response status.
+        attached invoice, returns True to indicate success, False to indicate
+        failure.
 
         Arguments:
         recipient -- email address of the primary recipient.
@@ -59,6 +61,7 @@ class EmailManager():
                     'Data': message.as_string()
                 }
             )
+            if "MessageId" in response:
+                return True
         except ClientError as e:
-            response = False
-        return response
+            return False
