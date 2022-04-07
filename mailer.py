@@ -115,7 +115,7 @@ class EmailManager():
             email=self.sender["email"]
         )
 
-    def construct_email_meta(self, message: MIMEMultipart, fields: dict) -> None:
+    def construct_email_meta(self, message: MIMEMultipart) -> None:
         """
         Adds the 'subject', 'to' and 'from' metadata to a MIME multipart email
         message.
@@ -124,11 +124,11 @@ class EmailManager():
         message -- the MIME multipart message to add metadata to.
         fields -- a dictionary containing the metadata.
         """
-        message["Subject"] = fields["subject"]
-        message["From"] = fields["sender"]
+        message["Subject"] = self.fields["subject"]
+        message["From"] = self.fields["sender"]
         message["To"] = self.invoice_meta["email_address"]
 
-    def construct_email(self, invoice_meta: dict, invoice_file_path: str):
+    def construct_email(self, invoice_file_path: str):
         """
         Creates a multipart MIME message with a subject, html message body and
         attached invoice, ready to be sent by EmailManager.send_email.
@@ -138,6 +138,7 @@ class EmailManager():
         invoice_file_path: absolute path of the invoice to be attached.
         """
         message = MIMEMultipart("mixed")
+        self.construct_email_meta(message)
         body = MIMEMultipart("alternative")
         body.attach(MIMEText(self.fields["html_body"], "html", "utf-8"))
         body.attach(MIMEText(self.fields["text_body"], "text", "utf-8"))
@@ -153,7 +154,6 @@ class EmailManager():
 
     def send_email(
             self,
-            recipient: str,
             message: MIMEMultipart,
             cc_recipient: Optional[str] = ""
         ) -> bool:
@@ -171,7 +171,7 @@ class EmailManager():
             response = self.ses_client.send_raw_email(
                 Source=self.sender["email"],
                 Destinations=[
-                    recipient
+                    self.invoice_meta["email_address"]
                 ],
                 RawMessage={
                     'Data': message.as_string()

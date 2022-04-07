@@ -127,8 +127,8 @@ def email_invoice(request_body: dict) -> None:
     email_manager = EmailManager(invoice_meta)
     strip_emails_from_request(request_body)
     invoice_file_path = generate_invoice(request_body)
-    message = email_manager.construct_email(invoice_meta, invoice_file_path)
-    email_manager.send_email(invoice_meta["email_address"], message)
+    message = email_manager.construct_email(invoice_file_path)
+    email_manager.send_email(message)
 
 
 @app.post("/invoice")
