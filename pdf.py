@@ -361,10 +361,10 @@ def generate_output_path(invoice_form: dict) -> str:
     output_path = (
         "invoices/"
         + "_".join([
+            "Invoice_for",
             invoice_form["first_name"],
             invoice_form["last_name"],
-            invoice_form["invoice_date"],
-            datetime.now().strftime("%H_%M_%S")
+            format_uk_date(invoice_form["invoice_date"], separator="_")
         ])
         + ".pdf"
     )
