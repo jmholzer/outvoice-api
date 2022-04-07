@@ -368,6 +368,7 @@ def generate_output_path(invoice_form: dict) -> str:
             invoice_form["invoice_date"],
             datetime.now().strftime("%H_%M_%S")
         ])
+        + ".pdf"
     )
     return generate_absolute_path(output_path)
 
