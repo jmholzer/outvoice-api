@@ -1,0 +1,7 @@
+Hello {first_name}
+
+A new invoice is available for you from {sender} dated {invoice_date}.
+
+Please find the invoice attached to this email.
+
+Best wishes from Outvoice
