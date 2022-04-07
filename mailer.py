@@ -48,7 +48,7 @@ class EmailManager():
     
     def init_fields(self) -> Dict[str, str]:
         """
-        Initialise the 'fields' of the email; subject, html body, text body, 
+        Initialise the 'fields' of the email; subject, html body, text body and sender.
         """
         fields = self.read_fields()
         self.format_body(fields)
@@ -140,7 +140,7 @@ class EmailManager():
         message = MIMEMultipart("mixed")
         body = MIMEMultipart("alternative")
         body.attach(MIMEText(self.fields["html_body"], "html", "utf-8"))
-        body.attach(MIMEText(self.fields["text_body"], "html", "utf-8"))
+        body.attach(MIMEText(self.fields["text_body"], "text", "utf-8"))
         message.attach(body)
         attachment = MIMEApplication(open(invoice_file_path, 'rb').read())
         attachment.add_header(
