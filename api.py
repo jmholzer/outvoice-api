@@ -1,12 +1,14 @@
+from urllib import request
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import inspect
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Union
 from pydantic import BaseModel
 from pdf import generate_invoice
 from db import SqliteConnector
 from copy import deepcopy
+from mailer import EmailManager
 
 app = FastAPI()
 
@@ -87,20 +89,6 @@ def strip_emails_from_request(request_body: dict) -> FileResponse:
     del request_body["cc_email_address"]
 
 
-def download_invoice(request_body: dict) -> FileResponse:
-    """
-    Returns a pdf file of an invoice.
-
-    Arguments:
-    request_body -- information on client submitted by caller.
-    """
-    strip_emails_from_request(request_body)
-    invoice = generate_invoice(request_body)
-    return FileResponse(invoice,
-        media_type="application/pdf",
-    )
-
-
 def add_client_using_invoice(request_body: dict) -> None:
     """
     Helper function for converting an invoice generation
@@ -114,6 +102,33 @@ def add_client_using_invoice(request_body: dict) -> None:
     del request_body_copy["invoice_number"]
     request_body_copy["method"] = "add"
     add_client(request_body_copy)
+
+
+def download_invoice(request_body: dict) -> FileResponse:
+    """
+    Returns a pdf file of an invoice.
+
+    Arguments:
+    request_body -- information on client submitted by caller.
+    """
+    strip_emails_from_request(request_body)
+    invoice_file_path = generate_invoice(request_body)
+    return FileResponse(invoice_file_path,
+        media_type="application/pdf",
+    )
+
+
+def email_invoice(request_body: dict) -> None:
+    invoice_meta = {
+        "first_name": request_body["first_name"],
+        "email_address": request_body["email_address"],
+        "invoice_date": request_body["invoice_date"]
+    }
+    email_manager = EmailManager(invoice_meta)
+    strip_emails_from_request(request_body)
+    invoice_file_path = generate_invoice(request_body)
+    message = email_manager.construct_email(invoice_meta, invoice_file_path)
+    email_manager.send_email(invoice_meta["email_address"], message)
 
 
 @app.post("/invoice")
