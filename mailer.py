@@ -5,7 +5,7 @@ import json
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
-from utility import generate_absolute_path
+from utility import generate_absolute_path, format_uk_date
 import os
 
 class EmailManager():
@@ -87,7 +87,7 @@ class EmailManager():
             fields[body_type] = fields[body_type].format(
                 first_name=self.invoice_meta["first_name"],
                 sender=self.sender["company_name"],
-                invoice_date=self.invoice_meta["invoice_date"]
+                invoice_date=format_uk_date(self.invoice_meta["invoice_date"])
             )
 
     def format_subject(self, fields: Dict[str, str]) -> None:

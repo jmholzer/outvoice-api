@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 def snake_to_camel(snake_str: str, lower_first: bool = True) -> str:
     """
@@ -30,3 +31,12 @@ def generate_absolute_path(relative_path: str) -> str:
     """
     path_to_script = os.path.dirname(os.path.abspath(__file__))
     return path_to_script + "/" + relative_path
+
+
+def format_uk_date(date_to_format: str) -> str:
+    """
+    Takes in a date in the format Y-m-d and returns the
+    UK-formatted version of the date (d/m/Y).
+    """
+    date = datetime.strptime(date_to_format, "%Y-%m-%d")
+    return date.strftime("%d/%m/%Y")

@@ -13,7 +13,7 @@ from reportlab.pdfgen.textobject import PDFTextObject
 from datetime import datetime
 from copy import copy
 from typing import List, Dict, Optional
-from utility import generate_absolute_path
+from utility import generate_absolute_path, format_uk_date
 
 
 #TODO: move this to a file, don't have this hardcoded
@@ -162,10 +162,10 @@ def format_subtotal_tax_and_balance(invoice_form: dict):
     invoice_form["balance"] = format_currency_string(invoice_form["balance"], "£")
 
 
-def format_date(invoice_form: dict):
+def format_invoice_form_dates(invoice_form: dict):
     """
     Convert date from the format received in the API call to
-    a localised (British) date in-place.
+    a localised (UK) date in-place.
 
     Arguments:
     invoice_form -- data about the client passed from
@@ -175,9 +175,7 @@ def format_date(invoice_form: dict):
         "invoice_date",
         "pay_date"
     ]:
-        date = datetime.strptime(invoice_form[key], "%Y-%m-%d")
-        date = date.strftime("%d/%m/%Y")
-        invoice_form[key] = date
+        invoice_form[key] = format_uk_date(invoice_form[key])
 
 
 def format_address_line(invoice_form: dict) -> None:
@@ -248,7 +246,7 @@ def format_invoice_form_input(invoice_form: dict) -> None:
     format_line_items(invoice_form)
     format_subtotal_tax_and_balance(invoice_form)
     format_address_line(invoice_form)
-    format_date(invoice_form)
+    format_invoice_form_dates(invoice_form)
     format_terms_line(invoice_form)
     delete_unused_keys(invoice_form)
 
