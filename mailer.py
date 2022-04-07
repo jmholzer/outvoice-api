@@ -20,11 +20,15 @@ class EmailManager():
             company controlling the outvoice instance.
     """
 
-    def __init__(self):
+    def __init__(self, invoice_meta: Dict[str, str]):
         # Set object values with function calls
         self.ses_client = self.init_ses_client()
         # Read the name of the company controlling the outvoice instance
         self.sender = self.init_sender()
+        # Initialise a dict containing meta data for the invoice being sent
+        self.invoice_meta = invoice_meta
+        # Initialise the email 'fields' (subject, html body, )
+        self.fields = self.init_fields()
 
     def init_ses_client(self):
         """
@@ -41,6 +45,16 @@ class EmailManager():
         company_file_path = generate_absolute_path("/resources/company/company.json")
         with open(company_file_path) as company_file:
             return json.load(company_file)
+    
+    def init_fields(self) -> Dict[str, str]:
+        """
+        Initialise the 'fields' of the email; subject, html body, text body, 
+        """
+        fields = self.read_fields()
+        self.format_body(fields)
+        self.format_subject(fields)
+        self.format_sender(fields)
+        return fields
 
     def read_fields(self) -> str:
         """
@@ -48,9 +62,10 @@ class EmailManager():
         predetermined location into a dictionary.
         """
         fields = {
-            "body": "",
+            "text_body": "",
+            "html_body": "",
             "subject": "",
-            "sender": "",
+            "sender": ""
         }
         for field in fields:
             file_path = generate_absolute_path(f"/resources/email/{field}")
@@ -58,7 +73,7 @@ class EmailManager():
                 fields[field] = file.read()
         return fields
 
-    def format_body(self, fields: Dict[str, str], invoice_meta: dict) -> None:
+    def format_body(self, fields: Dict[str, str]) -> None:
         """
         Formats the supplied email html body with values specific to the
         invoice being generated.
@@ -68,11 +83,12 @@ class EmailManager():
         invoice_meta -- a dict containing the meta data on the invoice
             necessary to address the client.
         """
-        fields["body"] = fields["body"].format(
-            first_name=invoice_meta["first_name"],
-            sender=self.sender["company_name"],
-            invoice_date=invoice_meta["invoice_date"]
-        )
+        for body_type in ["text_body", "html_body"]:
+            fields[body_type] = fields[body_type].format(
+                first_name=self.invoice_meta["first_name"],
+                sender=self.sender["company_name"],
+                invoice_date=self.invoice_meta["invoice_date"]
+            )
 
     def format_subject(self, fields: Dict[str, str]) -> None:
         """
@@ -108,7 +124,9 @@ class EmailManager():
         message -- the MIME multipart message to add metadata to.
         fields -- a dictionary containing the metadata.
         """
-        pass
+        message["Subject"] = fields["subject"]
+        message["From"] = fields["sender"]
+        message["To"] = self.invoice_meta["email_address"]
 
     def construct_email(self, invoice_meta: dict, invoice_file_path: str):
         """
@@ -119,22 +137,16 @@ class EmailManager():
         invoice_meta: meta data on the invoice being generated.
         invoice_file_path: absolute path of the invoice to be attached.
         """
-        fields = self.read_fields()
-        self.format_body(fields, invoice_meta)
-        self.format_subject(fields)
-        self.format_sender(fields)
         message = MIMEMultipart("mixed")
-        message["Subject"] = fields["subject"]
-        message["From"] = fields["sender"]
-        message["To"] = invoice_meta["email_address"]
         body = MIMEMultipart("alternative")
-        body.attach(MIMEText(fields["body"], "html", "utf-8"))
+        body.attach(MIMEText(self.fields["html_body"], "html", "utf-8"))
+        body.attach(MIMEText(self.fields["text_body"], "html", "utf-8"))
         message.attach(body)
         attachment = MIMEApplication(open(invoice_file_path, 'rb').read())
         attachment.add_header(
             'Content-Disposition',
             'attachment',
-            filename=os.path.basename(invoice_file_path)+".pdf"
+            filename=os.path.basename(invoice_file_path)
         )
         message.attach(attachment)
         return message
