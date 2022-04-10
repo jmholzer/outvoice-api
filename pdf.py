@@ -1,24 +1,19 @@
 import io
-from json import load
-from PyPDF2 import PdfFileWriter, PdfFileReader
-from PyPDF2.pdf import PageObject
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.pdfmetrics import stringWidth
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.units import mm
-from reportlab.pdfgen.canvas import Canvas
-from reportlab.pdfgen.textobject import PDFTextObject
-from datetime import datetime
 from copy import copy
-from typing import List, Dict, Optional
-from utility import generate_absolute_path, format_uk_date
+from json import load
+from typing import Dict, List, Optional, Union
 
+from PyPDF2 import PdfFileReader, PdfFileWriter
+from PyPDF2.pdf import PageObject
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import mm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
+from reportlab.pdfgen.textobject import PDFTextObject
 
-#TODO: move this to a file, don't have this hardcoded
-# Name of the layout to use to generate the invoice.
-LAYOUT_NAME = "default"
+from utility import format_uk_date, generate_absolute_path
+
 
 # TODO: read the fonts to use from the layouts file, don't hardcode.
 # Register the fonts used.
@@ -349,7 +344,7 @@ def generate_line_item_lists(line_items: List[str]) -> List[List[str]]:
     return [line_items[j:j+10] for j in range(0, n, 9)]
 
 
-def generate_output_path(invoice_form: dict) -> str:
+def generate_output_path(invoice_form: Dict[str, str]) -> str:
     """
     Takes in a dict representing the submitted form data
     and returns a string indicating where the generated
@@ -371,7 +366,7 @@ def generate_output_path(invoice_form: dict) -> str:
     return generate_absolute_path(output_path)
 
 
-def read_layout_file(layout_name):
+def read_layout_file(layout_name) -> Dict[str, Union[str, Dict[str, str]]]:
     """
     Read the layout file with the specified name and return the dict
     loaded from the json therein.
@@ -385,6 +380,17 @@ def read_layout_file(layout_name):
     return layout
 
 
+def read_layout_name() -> str:
+    """
+    Reads the name of the layout file to use for the company controlling
+    the instance of outvoice.
+    """
+    file_path = generate_absolute_path(f"/resources/company/company.json")
+    with open(file_path, "r") as company_file:
+        layout_name = load(company_file)["layout_name"]
+    return layout_name
+
+
 def generate_invoice_pages(invoice_form: dict) -> List[PageObject]:
     """
     Returns a list of finished invoice pages (PageObjects).
@@ -394,9 +400,10 @@ def generate_invoice_pages(invoice_form: dict) -> List[PageObject]:
     """
     page_template_path = generate_absolute_path("resources/templates/invoice.pdf")
     line_item_lists = generate_line_item_lists(invoice_form["line_items"])
-    invoice_pages = []
-    layout = read_layout_file(LAYOUT_NAME)
+    layout_name = read_layout_name()
+    layout = read_layout_file(layout_name)
 
+    invoice_pages = []
     total_pages = len(line_item_lists)
     for page_number, line_item_list in enumerate(line_item_lists):
         invoice_form_copy = copy(invoice_form)

@@ -1,4 +1,5 @@
 {
     "company_name": "Example Services Limited",
-    "email": "jannic.holzer@gmail.com"
+    "email": "jannic.holzer@gmail.com",
+    "layout_name": "default"
 }
