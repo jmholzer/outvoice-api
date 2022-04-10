@@ -1,0 +1,10 @@
+[
+    {
+        "name": "OpenSans",
+        "ttf_file": "OpenSans-Regular.ttf"
+    },
+    {
+        "name": "OpenSans-Italic",
+        "ttf_file": "OpenSans-Italic.ttf"
+    }
+]

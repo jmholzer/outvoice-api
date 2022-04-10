@@ -15,12 +15,6 @@ from reportlab.pdfgen.textobject import PDFTextObject
 from utility import format_uk_date, generate_absolute_path
 
 
-# TODO: read the fonts to use from the layouts file, don't hardcode.
-# Register the fonts used.
-pdfmetrics.registerFont(TTFont('OpenSans', 'OpenSans-Regular.ttf'))
-pdfmetrics.registerFont(TTFont('OpenSans-Italic', 'OpenSans-Italic.ttf'))
-
-
 def write_page_to_file(page: PageObject, output_file_path: str) -> None:
     """
     Save a single page as a PDF document.
@@ -380,6 +374,19 @@ def read_layout_file(layout_name) -> Dict[str, Union[str, Dict[str, str]]]:
     return layout
 
 
+def read_layout_fonts(layout_name: str) -> List[Dict[str, str]]:
+    """
+    Read the fonts associated with the layout being used.
+
+    Arguments:
+    layout_name -- the name of the layout being used.
+    """
+    file_path = generate_absolute_path(f"/resources/layouts/{layout_name}-fonts.json")
+    with open(file_path, "r") as fonts_file:
+        fonts = load(fonts_file)
+    return fonts
+
+
 def read_layout_name() -> str:
     """
     Reads the name of the layout file to use for the company controlling
@@ -442,3 +449,24 @@ def generate_invoice(invoice_form: dict) -> str:
         invoice.write(output_file)
 
     return output_path
+
+
+def register_fonts(fonts: List[Dict[str, str]]) -> None:
+    """
+    Register the fonts to use. This function is called once when the
+    module is imported.
+
+    Arguments:
+    fonts -- a list of dicts containing the name of the font to register
+        and the .ttf file to use for this name.
+    """
+    for font in fonts:
+        pdfmetrics.registerFont(TTFont(font["name"], font["ttf_file"]))
+
+
+"""
+Always register the necessary fonts once when the module is imported
+"""
+layout_name = read_layout_name()
+fonts = read_layout_fonts(layout_name)
+register_fonts(fonts)
