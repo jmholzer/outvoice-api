@@ -42,12 +42,12 @@ def read_first_page(input_file_path: str) -> PageObject:
 
 
 def write_text_to_overlay(
-        line: str,
-        text: PDFTextObject,
-        layout: dict,
-        x_offset: Optional[float] = 0,
-        y_offset: Optional[float] = 0
-    ) -> None:
+    line: str,
+    text: PDFTextObject,
+    layout: Dict[str, Union[str, Dict[str, str]]],
+    x_offset: Optional[float] = 0,
+    y_offset: Optional[float] = 0,
+) -> None:
     """
     Write the text at the given position, with a given font and size. Modifies the
     passed PDFTextObject (text) in place and does not return a value.
@@ -100,16 +100,16 @@ def add_tax_and_balance(invoice_form: dict):
         the API end-point.
     """
     invoice_form["tax"] = str(
-        float(invoice_form['tax'])
-        * float(invoice_form['subtotal'])
+        float(invoice_form["tax"]) * float(invoice_form["subtotal"])
     )
     invoice_form["balance"] = str(
-        float(invoice_form["tax"] )
-        + float(invoice_form['subtotal'])
+        float(invoice_form["tax"]) + float(invoice_form["subtotal"])
     )
 
 
-def add_line_items_amount(invoice_form: dict):
+def add_line_items_amount(
+    invoice_form: Dict[str, Union[str, List[Dict[str, str]]]]
+) -> None:
     """
     Calculate the amount due for each line item and add these values
     to the line_items dictionary in the invoice form dictionary.
@@ -124,7 +124,9 @@ def add_line_items_amount(invoice_form: dict):
         line_item["amount"] = f"{(cost_per_item * count):.2f}"
 
 
-def format_line_items(invoice_form: dict):
+def format_line_items(
+    invoice_form: Dict[str, Union[str, List[Dict[str, str]]]]
+) -> None:
     """
     Formats the strings included in the each of the dicts in the
     line items array.
@@ -138,7 +140,9 @@ def format_line_items(invoice_form: dict):
         line_item["cost_per_item"] = cost_per_item
 
 
-def format_subtotal_tax_and_balance(invoice_form: dict):
+def format_subtotal_tax_and_balance(
+    invoice_form: Dict[str, Union[str, List[Dict[str, str]]]]
+) -> None:
     """
     Formats the subtotal, tax and balance strings.
 
@@ -151,7 +155,9 @@ def format_subtotal_tax_and_balance(invoice_form: dict):
     invoice_form["balance"] = format_currency_string(invoice_form["balance"], "£")
 
 
-def format_invoice_form_dates(invoice_form: dict):
+def format_invoice_form_dates(
+    invoice_form: Dict[str, Union[str, List[Dict[str, str]]]]
+) -> None:
     """
     Convert date from the format received in the API call to
     a localised (UK) date in-place.
@@ -160,14 +166,13 @@ def format_invoice_form_dates(invoice_form: dict):
     invoice_form -- data about the client passed from
         the API end-point.
     """
-    for key in [
-        "invoice_date",
-        "pay_date"
-    ]:
+    for key in ["invoice_date", "pay_date"]:
         invoice_form[key] = format_uk_date(invoice_form[key])
 
 
-def format_address_line(invoice_form: dict) -> None:
+def format_address_line(
+    invoice_form: Dict[str, Union[str, List[Dict[str, str]]]]
+) -> None:
     """
     Add formatted address line to invoice_form in-place.
 
@@ -176,20 +181,20 @@ def format_address_line(invoice_form: dict) -> None:
         the API end-point.
     """
     address = [
-        invoice_form["first_name"] + ' ' + invoice_form["last_name"],
+        invoice_form["first_name"] + " " + invoice_form["last_name"],
         invoice_form["address_line_1"],
         invoice_form["city"],
-        invoice_form["post_code"]
+        invoice_form["post_code"],
     ]
     address_line_2 = invoice_form.get("address_line_2", "")
     if address_line_2:
         address.insert(2, address_line_2)
-    invoice_form["address"] = (
-        '\n'.join(address)
-    )
+    invoice_form["address"] = "\n".join(address)
 
 
-def format_terms_line(invoice_form: dict) -> None:
+def format_terms_line(
+    invoice_form: Dict[str, Union[str, List[Dict[str, str]]]]
+) -> None:
     """
     Add a line informing the customer of the terms of the invoice.
 
@@ -200,9 +205,11 @@ def format_terms_line(invoice_form: dict) -> None:
     invoice_form["terms"] = f"Pay on or before {invoice_form['pay_date']}."
 
 
-def delete_unused_keys(invoice_form: dict) -> None:
+def delete_unused_keys(
+    invoice_form: Dict[str, Union[str, List[Dict[str, str]]]]
+) -> None:
     """
-    Delete the keys (in-place) that are no longer used as 
+    Delete the keys (in-place) that are no longer used as
     a result of generating formatted output strings.
 
     Arguments:
@@ -216,12 +223,14 @@ def delete_unused_keys(invoice_form: dict) -> None:
         "address_line_2",
         "city",
         "post_code",
-        "pay_date"
+        "pay_date",
     ]:
         del invoice_form[key]
 
 
-def format_invoice_form_input(invoice_form: dict) -> None:
+def format_invoice_form_input(
+    invoice_form: Dict[str, Union[str, List[Dict[str, str]]]]
+) -> None:
     """
     Makes in-place formatting changes to the dict containing
     the form input used to generate an invoice.
@@ -241,10 +250,8 @@ def format_invoice_form_input(invoice_form: dict) -> None:
 
 
 def write_line_items(
-        text: PDFTextObject,
-        line_items: List[Dict[str,str]],
-        layout: Dict[str,str]
-    ) -> None:
+    text: PDFTextObject, line_items: List[Dict[str, str]], layout: Dict[str, str]
+) -> None:
     """
     Write a given array of line items to the supplied text object (invoice page).
 
@@ -257,22 +264,19 @@ def write_line_items(
     for line_item in line_items:
         for key in line_item:
             write_text_to_overlay(
-                line_item[key],
-                text,
-                layout[key],
-                y_offset=line_item_offset
+                line_item[key], text, layout[key], y_offset=line_item_offset
             )
         line_item_offset -= 5
 
 
 def write_page_number(
-        text: PDFTextObject,
-        page_number: int,
-        total_pages: int,
-        layout: Dict[str, Dict[str, str]]
-    ) -> None:
+    text: PDFTextObject,
+    page_number: int,
+    total_pages: int,
+    layout: Dict[str, Dict[str, str]],
+) -> None:
     """
-    Write a page number and (if necessary) a 'turnover prompt' to 
+    Write a page number and (if necessary) a 'turnover prompt' to
     the supplied text object (invoice page)
 
     Arguments:
@@ -293,11 +297,11 @@ def write_page_number(
 
 
 def generate_invoice_overlay(
-        invoice_form: Dict[str,str],
-        layout: Dict[str,str],
-        page_number: int,
-        total_pages: int
-    ) -> PageObject:
+    invoice_form: Dict[str, str],
+    layout: Dict[str, str],
+    page_number: int,
+    total_pages: int,
+) -> PageObject:
     """
     Create a PDF page (overlay) of invoice information
     that can be rendered on top of a blank invoice page.
@@ -305,7 +309,7 @@ def generate_invoice_overlay(
     Arguments:
     invoice_form -- data about the client passed from
         the API end-point.
-    """    
+    """
     packet = io.BytesIO()
     invoice_layer_canvas = canvas.Canvas(packet)
     invoice_layer_canvas.setPageSize((A4))
@@ -316,7 +320,7 @@ def generate_invoice_overlay(
             write_line_items(text, invoice_form["line_items"], layout["line_items"])
             continue
         write_text_to_overlay(invoice_form[field], text, layout[field])
-    
+
     write_page_number(text, page_number, total_pages, layout)
 
     invoice_layer_canvas.drawText(text)
@@ -335,7 +339,7 @@ def generate_line_item_lists(line_items: List[str]) -> List[List[str]]:
         line_items -- the list of line items to split into sublists
     """
     n = len(line_items)
-    return [line_items[j:j+10] for j in range(0, n, 9)]
+    return [line_items[j : j + 10] for j in range(0, n, 9)]
 
 
 def generate_output_path(invoice_form: Dict[str, str]) -> str:
@@ -349,12 +353,14 @@ def generate_output_path(invoice_form: Dict[str, str]) -> str:
     """
     output_path = (
         "invoices/"
-        + "_".join([
-            "Invoice_for",
-            invoice_form["first_name"],
-            invoice_form["last_name"],
-            format_uk_date(invoice_form["invoice_date"], separator="_")
-        ])
+        + "_".join(
+            [
+                "Invoice_for",
+                invoice_form["first_name"],
+                invoice_form["last_name"],
+                format_uk_date(invoice_form["invoice_date"], separator="_"),
+            ]
+        )
         + ".pdf"
     )
     return generate_absolute_path(output_path)
@@ -398,7 +404,9 @@ def read_layout_name() -> str:
     return layout_name
 
 
-def generate_invoice_pages(invoice_form: dict) -> List[PageObject]:
+def generate_invoice_pages(
+    invoice_form: Dict[str, Union[str, List[Dict[str, str]]]]
+) -> List[PageObject]:
     """
     Returns a list of finished invoice pages (PageObjects).
 
@@ -419,16 +427,18 @@ def generate_invoice_pages(invoice_form: dict) -> List[PageObject]:
         # Read the blank invoice
         invoice_page = read_first_page(page_template_path)
         # Generate an overlay using client data
-        overlay = generate_invoice_overlay(invoice_form_copy, layout, page_number, total_pages)
+        overlay = generate_invoice_overlay(
+            invoice_form_copy, layout, page_number, total_pages
+        )
         # Merge the overlay on top of the blank invoice.
         invoice_page.mergePage(overlay)
         # Add page to the finished invoice.
         invoice_pages.append(invoice_page)
-    
+
     return invoice_pages
 
 
-def generate_invoice(invoice_form: dict) -> str:
+def generate_invoice(invoice_form: Dict[str, Union[str, List[Dict[str, str]]]]) -> str:
     """
     Generate and save an invoice as a PDF.
     Returns absolute path of saved invoice.
