@@ -1,4 +1,4 @@
-CREATE TABLE addresses(
+CREATE TABLE address(
     first_name text,
     last_name text,
     address_line_1 text,
