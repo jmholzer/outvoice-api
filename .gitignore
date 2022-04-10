@@ -128,8 +128,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# IMPORTANT ignore db folder to avoid leaking data to GH :)
-db/
+# IMPORTANT ignore .db files to avoid leaking data to GH :)
+db/*.db
 
 # Ignore generated invoices folder
 invoices/
