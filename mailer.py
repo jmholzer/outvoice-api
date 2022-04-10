@@ -1,12 +1,14 @@
-from typing import Dict, Optional
-import boto3
-from botocore.exceptions import ClientError
 import json
+import os
+from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.mime.application import MIMEApplication
-from utility import generate_absolute_path, format_uk_date
-import os
+from typing import Dict, Optional
+
+import boto3
+from botocore.exceptions import ClientError
+
+from utility import format_uk_date, generate_absolute_path
 
 
 class EmailManager:
