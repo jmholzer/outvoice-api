@@ -127,4 +127,4 @@ class SqliteConnector():
         cur.execute("select count(*) from address")
         row_count_post = cur.fetchone()[0]
 
-        return False if row_count_pre == row_count_post else True
+        return not (row_count_pre == row_count_post)
