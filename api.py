@@ -1,4 +1,3 @@
-from urllib import request
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,7 +16,7 @@ origins = [
     "http://localhost",
     "http://localhost:3000",
     "http://outvoice.com",
-    "http://www.outvoice.com"
+    "http://www.outvoice.com",
 ]
 
 
@@ -47,6 +46,7 @@ class InvoiceForm(BaseModel):
     cc_email_address: str
     method: str
 
+
 class ClientForm(BaseModel):
     first_name: str
     last_name: str
@@ -64,11 +64,11 @@ client_db_row_schema = [
     "address_line_1",
     "address_line_2",
     "city",
-    "post_code"
+    "post_code",
 ]
 
 
-def get_request_fields(request: InvoiceForm):
+def get_request_fields(request: InvoiceForm) -> List[str]:
     """
     Return a list of fields (json keys) in the  submitted invoice
     form as a convenience when converting an incoming request to
@@ -78,7 +78,7 @@ def get_request_fields(request: InvoiceForm):
     request -- the submitted request with InvoiceForm basemodel whose
         fields to extract.
     """
-    dummy = dir(type('dummy', (BaseModel,), {}))
+    dummy = dir(type("dummy", (BaseModel,), {}))
     fields = []
     for item in inspect.getmembers(request):
         if item[0] not in dummy:
@@ -86,7 +86,9 @@ def get_request_fields(request: InvoiceForm):
     return fields
 
 
-def strip_emails_from_request(request_body: dict) -> FileResponse:
+def strip_emails_from_request(
+    request_body: Dict[str, Union[str, List[Dict[str, str]]]]
+) -> FileResponse:
     """
     Deletes the key-value pairs for email addresses, which are not
     required in order to generate in invoice.
@@ -98,7 +100,9 @@ def strip_emails_from_request(request_body: dict) -> FileResponse:
     del request_body["cc_email_address"]
 
 
-def add_client_using_invoice(request_body: dict) -> None:
+def add_client_using_invoice(
+    request_body: Dict[str, Union[str, List[Dict[str, str]]]]
+) -> None:
     """
     Helper function for converting an invoice generation
     request to a request to add user to the client database
@@ -113,7 +117,9 @@ def add_client_using_invoice(request_body: dict) -> None:
     add_client(request_body_copy)
 
 
-def download_invoice(request_body: dict) -> FileResponse:
+def download_invoice(
+    request_body: Dict[str, Union[str, List[Dict[str, str]]]]
+) -> FileResponse:
     """
     Returns a pdf file of an invoice.
 
@@ -122,16 +128,17 @@ def download_invoice(request_body: dict) -> FileResponse:
     """
     strip_emails_from_request(request_body)
     invoice_file_path = generate_invoice(request_body)
-    return FileResponse(invoice_file_path,
+    return FileResponse(
+        invoice_file_path,
         media_type="application/pdf",
     )
 
 
-def email_invoice(request_body: dict) -> None:
+def email_invoice(request_body: Dict[str, Union[str, List[Dict[str, str]]]]) -> None:
     invoice_meta = {
         "first_name": request_body["first_name"],
         "email_address": request_body["email_address"],
-        "invoice_date": request_body["invoice_date"]
+        "invoice_date": request_body["invoice_date"],
     }
     email_manager = EmailManager(invoice_meta)
     strip_emails_from_request(request_body)
@@ -142,14 +149,16 @@ def email_invoice(request_body: dict) -> None:
 
 
 @app.post("/invoice")
-async def root(client_invoice_form: InvoiceForm):
+async def root(
+    client_invoice_form: InvoiceForm,
+) -> Union[Dict[str, bool], FileResponse]:
     """
     API endpoint for the 'invoice' resource.
 
     Arguments:
     client_invoice_form -- information on client submitted by caller.
     """
-    
+
     """
     Create a dictionary out of client_invoice_form
     as this keeps pdf.py independent of BaseModel (fastapi)
@@ -162,17 +171,14 @@ async def root(client_invoice_form: InvoiceForm):
 
     add_client_using_invoice(request_body)
 
-    method_routes = {
-        "download": download_invoice,
-        "email": email_invoice
-    }
+    method_routes = {"download": download_invoice, "email": email_invoice}
 
     method = request_body["method"]
     del request_body["method"]
     return method_routes[method](request_body)
 
 
-def add_client(request_body: dict) -> list:
+def add_client(request_body: Dict[str, Union[str, List[Dict[str, str]]]]) -> None:
     """
     Add a row matching the data in request_body into
     the address table in the client database.
@@ -183,12 +189,13 @@ def add_client(request_body: dict) -> list:
     """
     sqlite_connector = SqliteConnector("clients.db")
     sqlite_connector.enter_address(
-        tuple(request_body[key] for key in 
-            client_db_row_schema)
+        tuple(request_body[key] for key in client_db_row_schema)
     )
 
 
-def remove_client(request_body: dict):
+def remove_client(
+    request_body: Dict[str, Union[str, List[Dict[str, str]]]]
+) -> Dict[str, bool]:
     """
     Remove the row matching the data in request_body from
     the address table in the client database.
@@ -199,18 +206,19 @@ def remove_client(request_body: dict):
     """
     sqlite_connector = SqliteConnector("clients.db")
     success = sqlite_connector.remove_address(
-        tuple(request_body[key] for key in 
-            client_db_row_schema)
+        tuple(request_body[key] for key in client_db_row_schema)
     )
 
     return {"success": success}
 
 
-def search_client(request_body: dict) -> list:
+def search_client(
+    request_body: Dict[str, Union[str, List[Dict[str, str]]]]
+) -> List[Dict[str, str]]:
     """
-    Searches the address table in the client database 
+    Searches the address table in the client database
     for an address matching a given first and last name.
-    Returns an array of dicts, each dict representing 
+    Returns an array of dicts, each dict representing
     a row of matching results.
 
     Arguments:
@@ -220,18 +228,16 @@ def search_client(request_body: dict) -> list:
     sqlite_connector = SqliteConnector("clients.db")
 
     results = sqlite_connector.search_address(
-        request_body["first_name"],
-        request_body["last_name"]
+        request_body["first_name"], request_body["last_name"]
     )
-    
-    return([
-        {key: row[key] for key in row.keys()}
-        for row in results
-    ])
+
+    return [{key: row[key] for key in row.keys()} for row in results]
 
 
 @app.post("/client")
-async def root(client_action_form: ClientForm):
+async def root(
+    client_action_form: ClientForm,
+) -> Union[Dict[str, bool], List[Dict[str, str]]]:
     """
     API endpoint for the 'client' resource.
 
@@ -249,7 +255,7 @@ async def root(client_action_form: ClientForm):
     method_routes = {
         "add": add_client,
         "remove": remove_client,
-        "search": search_client
+        "search": search_client,
     }
 
     method = request_body["method"]
