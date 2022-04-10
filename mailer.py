@@ -8,7 +8,8 @@ from email.mime.application import MIMEApplication
 from utility import generate_absolute_path, format_uk_date
 import os
 
-class EmailManager():
+
+class EmailManager:
     """
     Manage building and sending emails with attachments to clients on behalf
     of companies, using an email enabled for use with AWS SES (Amazon Web
@@ -34,7 +35,7 @@ class EmailManager():
         """
         Returns an interface to SES.
         """
-        return boto3.client('ses', region_name="eu-central-1")
+        return boto3.client("ses", region_name="eu-central-1")
 
     def init_sender(self) -> None:
         """
@@ -45,7 +46,7 @@ class EmailManager():
         company_file_path = generate_absolute_path("/resources/company/company.json")
         with open(company_file_path) as company_file:
             return json.load(company_file)
-    
+
     def init_fields(self) -> Dict[str, str]:
         """
         Initialise the 'fields' of the email; subject, html body, text body and sender.
@@ -58,15 +59,10 @@ class EmailManager():
 
     def read_fields(self) -> str:
         """
-        Reads the html body, subject and sender from a file with fixed, 
+        Reads the html body, subject and sender from a file with fixed,
         predetermined location into a dictionary.
         """
-        fields = {
-            "text_body": "",
-            "html_body": "",
-            "subject": "",
-            "sender": ""
-        }
+        fields = {"text_body": "", "html_body": "", "subject": "", "sender": ""}
         for field in fields:
             file_path = generate_absolute_path(f"/resources/email/{field}")
             with open(file_path, "r") as file:
@@ -87,7 +83,7 @@ class EmailManager():
             fields[body_type] = fields[body_type].format(
                 first_name=self.invoice_meta["first_name"],
                 sender=self.sender["company_name"],
-                invoice_date=format_uk_date(self.invoice_meta["invoice_date"])
+                invoice_date=format_uk_date(self.invoice_meta["invoice_date"]),
             )
 
     def format_subject(self, fields: Dict[str, str]) -> None:
@@ -98,9 +94,7 @@ class EmailManager():
         Arguments:
         fields -- a dict containing the contents of the email.
         """
-        fields["subject"] = fields["subject"].format(
-            sender=self.sender["company_name"]
-        )
+        fields["subject"] = fields["subject"].format(sender=self.sender["company_name"])
 
     def format_sender(self, fields: Dict[str, str]) -> None:
         """
@@ -111,8 +105,7 @@ class EmailManager():
         fields -- a dict containing the contents of the email.
         """
         fields["sender"] = fields["sender"].format(
-            sender=self.sender["company_name"],
-            email=self.sender["email"]
+            sender=self.sender["company_name"], email=self.sender["email"]
         )
 
     def construct_email_meta(self, message: MIMEMultipart) -> None:
@@ -143,20 +136,18 @@ class EmailManager():
         body.attach(MIMEText(self.fields["html_body"], "html", "utf-8"))
         body.attach(MIMEText(self.fields["text_body"], "text", "utf-8"))
         message.attach(body)
-        attachment = MIMEApplication(open(invoice_file_path, 'rb').read())
+        attachment = MIMEApplication(open(invoice_file_path, "rb").read())
         attachment.add_header(
-            'Content-Disposition',
-            'attachment',
-            filename=os.path.basename(invoice_file_path)
+            "Content-Disposition",
+            "attachment",
+            filename=os.path.basename(invoice_file_path),
         )
         message.attach(attachment)
         return message
 
     def send_email(
-            self,
-            message: MIMEMultipart,
-            cc_recipient: Optional[str] = ""
-        ) -> bool:
+        self, message: MIMEMultipart, cc_recipient: Optional[str] = ""
+    ) -> bool:
         """
         Sends a MIME multipart email with a subject, html message body and
         attached invoice, returns True to indicate success, False to indicate
@@ -170,12 +161,8 @@ class EmailManager():
         try:
             response = self.ses_client.send_raw_email(
                 Source=self.sender["email"],
-                Destinations=[
-                    self.invoice_meta["email_address"]
-                ],
-                RawMessage={
-                    'Data': message.as_string()
-                }
+                Destinations=[self.invoice_meta["email_address"]],
+                RawMessage={"Data": message.as_string()},
             )
             if "MessageId" in response:
                 return True
