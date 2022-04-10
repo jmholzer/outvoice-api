@@ -68,13 +68,22 @@ client_db_row_schema = [
 ]
 
 
-def get_request_fields(request_cls):
-    dummy_base_model = dir(type('dummy', (BaseModel,), {}))
-    return [
-        item[0]
-        for item in inspect.getmembers(request_cls)
-        if item[0] not in dummy_base_model
-    ]
+def get_request_fields(request: InvoiceForm):
+    """
+    Return a list of fields (json keys) in the  submitted invoice
+    form as a convenience when converting an incoming request to
+    a python dict.
+
+    Arguments:
+    request -- the submitted request with InvoiceForm basemodel whose
+        fields to extract.
+    """
+    dummy = dir(type('dummy', (BaseModel,), {}))
+    fields = []
+    for item in inspect.getmembers(request):
+        if item[0] not in dummy:
+            fields.append(item[0])
+    return fields
 
 
 def strip_emails_from_request(request_body: dict) -> FileResponse:
@@ -189,12 +198,12 @@ def remove_client(request_body: dict):
         submitted by the caller.
     """
     sqlite_connector = SqliteConnector("clients.db")
-    result = sqlite_connector.remove_address(
+    success = sqlite_connector.remove_address(
         tuple(request_body[key] for key in 
             client_db_row_schema)
     )
 
-    return {"success": True} if result else {"success": False}
+    return {"success": success}
 
 
 def search_client(request_body: dict) -> list:
