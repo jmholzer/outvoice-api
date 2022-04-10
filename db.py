@@ -1,17 +1,17 @@
+import os
 import sqlite3
 from sqlite3 import Row
-import os
-from typing import Tuple, List
+from typing import List, Tuple
 
 
-class SqliteConnector():
+class SqliteConnector:
     """
     Class managing a connection to the SQLite instance.
 
     Attributes:
         db_name -- the name of the SQLite database file to connect to.
         con -- the sqlite3 object representing the connection to the database.
-    
+
     Methods:
         __init__
         open_db
@@ -36,11 +36,7 @@ class SqliteConnector():
         """
         application_path = os.path.dirname(os.path.realpath(__file__))
         return sqlite3.connect(
-            application_path
-            + os.path.sep
-            + "db"
-            + os.path.sep
-            + self.db_name
+            application_path + os.path.sep + "db" + os.path.sep + self.db_name
         )
 
     def close_db(self):
@@ -70,17 +66,14 @@ class SqliteConnector():
                 first_name=?
                 and last_name=?
             """,
-            (
-                first_name,
-                last_name
-            )
+            (first_name, last_name),
         )
         return list(result)
-    
+
     def enter_address(self, row: Tuple[str]) -> None:
         """
         Enters a new row into the address table.
-        
+
         Arguments:
             row -- a tuple containing the data that will fill the new row.
         """
@@ -92,7 +85,7 @@ class SqliteConnector():
             values
                 (?,?,?,?,?,?)
             """,
-            row
+            row,
         )
         self.con.commit()
 
@@ -120,7 +113,7 @@ class SqliteConnector():
                 and city=?
                 and post_code=?
             """,
-            row
+            row,
         )
         self.con.commit()
 
