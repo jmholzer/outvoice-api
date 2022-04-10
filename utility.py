@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from typing import Optional
 
+
 def snake_to_camel(snake_str: str, lower_first: bool = True) -> str:
     """
     Returns a given snake_case string in camelCase (/ CamelCase).
@@ -15,7 +16,7 @@ def snake_to_camel(snake_str: str, lower_first: bool = True) -> str:
     snake_str = snake_str.lower()
 
     result = "".join(
-        word.capitalize() if i != 0 else word 
+        word.capitalize() if i != 0 else word
         for i, word in enumerate(snake_str.split("_"))
     )
     if not lower_first:
