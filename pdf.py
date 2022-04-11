@@ -339,7 +339,7 @@ def generate_line_item_lists(line_items: List[str]) -> List[List[str]]:
         line_items -- the list of line items to split into sublists
     """
     n = len(line_items)
-    return [line_items[j : j + 10] for j in range(0, n, 9)]
+    return [line_items[j : j + 10] for j in range(0, n, 10)]
 
 
 def generate_output_path(invoice_form: Dict[str, str]) -> str:
