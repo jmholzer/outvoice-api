@@ -2,4 +2,6 @@ The backend code for Outvoice, a web application that allows small business owne
 
 Made using FastAPI, reportlab, Py2PDF and SQLite.
 
-https://user-images.githubusercontent.com/37243923/163071449-810ce891-922a-4233-8fbd-9cea7ebea5b4.mp4
+See a two-minute demo at https://youtu.be/OFn-FTn580I
+
+https://user-images.githubusercontent.com/37243923/163071707-90c167c7-80b4-49a6-9326-e3b3c36878cb.mp4
